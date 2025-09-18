@@ -867,15 +867,13 @@ function copyJSON() {
 }
 
 function saveForm() {
-    const formData = new FormData();
-    formData.append('schema', JSON.stringify(currentSchema));
-    
     fetch(`/api/save-form/{{ form.id }}/`, {
         method: 'POST',
-        body: formData,
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
+        },
+        body: JSON.stringify(currentSchema)
     })
     .then(response => response.json())
     .then(data => {
