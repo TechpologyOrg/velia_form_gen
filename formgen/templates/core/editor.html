@@ -654,6 +654,11 @@ function addQuestion() {
         placeholder: ''
     };
     
+    // Add choices array for choice and toggleList types
+    if (newQuestion.type === 'choice' || newQuestion.type === 'toggleList') {
+        newQuestion.choices = [];
+    }
+    
     if (!currentSchema.answers[selectedSectionIndex].questions) {
         currentSchema.answers[selectedSectionIndex].questions = [];
     }
@@ -981,13 +986,20 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     question.value = formData.get('value');
     question.placeholder = formData.get('placeholder');
     
+    // Handle choices array for choice and toggleList types
     if (question.type === 'choice' || question.type === 'toggleList') {
         const choicesText = formData.get('choices');
         question.choices = choicesText ? choicesText.split('\n').filter(c => c.trim()) : [];
+    } else {
+        // Remove choices array for other types
+        delete question.choices;
     }
     
     if (question.type === 'display') {
         question.key = formData.get('key');
+    } else {
+        // Remove key for other types
+        delete question.key;
     }
     
     // Handle visibility conditions
