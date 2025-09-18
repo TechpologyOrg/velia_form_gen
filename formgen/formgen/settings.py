@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ay9fqm4^_z8)mcxccq0a2fv)n$ig_u#+e1zd2f*!53o#7zcf6l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["formgen.velia.se"]
+ALLOWED_HOSTS = ["formgen.velia.se", "127.0.0.1", "localhost"]
 CSRF_TRUSTED_ORIGINS = ["https://formgen.velia.se"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 STATIC_ROOT = BASE_DIR / "static_collected"

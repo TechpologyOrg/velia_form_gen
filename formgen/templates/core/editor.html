@@ -110,6 +110,45 @@
                 <textarea id="sectionDescription" name="description" rows="3"
                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
+            
+            <!-- Visibility Controls -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Visibility Condition</label>
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="sectionHasVisibility" onchange="toggleSectionVisibility()"
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <label for="sectionHasVisibility" class="text-sm text-gray-700">This section is conditionally visible</label>
+                    </div>
+                    
+                    <div id="sectionVisibilityControls" class="hidden space-y-3 pl-6 border-l-2 border-gray-200">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                                <input type="text" id="sectionVisibilityPath" name="visibilityPath" placeholder="e.g., 4"
+                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                                <select id="sectionVisibilityOp" name="visibilityOp"
+                                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <option value="equals">equals</option>
+                                    <option value="not_equals">not equals</option>
+                                    <option value="contains">contains</option>
+                                    <option value="not_contains">not contains</option>
+                                    <option value="greater_than">greater than</option>
+                                    <option value="less_than">less than</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                                <input type="text" id="sectionVisibilityValue" name="visibilityValue" placeholder="e.g., employed"
+                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="flex justify-end space-x-3">
                 <button type="button" onclick="hideSectionModal()"
                         class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
@@ -145,12 +184,53 @@
                         <option value="boolean">Boolean</option>
                         <option value="date">Date</option>
                         <option value="display">Display</option>
+                        <option value="title">Title</option>
+                        <option value="toggleList">Toggle List</option>
                     </select>
                 </div>
             </div>
             
             <div id="questionSpecificFields" class="mb-4">
                 <!-- Dynamic fields based on question type -->
+            </div>
+            
+            <!-- Visibility Controls -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Visibility Condition</label>
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="questionHasVisibility" onchange="toggleQuestionVisibility()"
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <label for="questionHasVisibility" class="text-sm text-gray-700">This question is conditionally visible</label>
+                    </div>
+                    
+                    <div id="questionVisibilityControls" class="hidden space-y-3 pl-6 border-l-2 border-gray-200">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                                <input type="text" id="questionVisibilityPath" name="questionVisibilityPath" placeholder="e.g., 4"
+                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                                <select id="questionVisibilityOp" name="questionVisibilityOp"
+                                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <option value="equals">equals</option>
+                                    <option value="not_equals">not equals</option>
+                                    <option value="contains">contains</option>
+                                    <option value="not_contains">not contains</option>
+                                    <option value="greater_than">greater than</option>
+                                    <option value="less_than">less than</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                                <input type="text" id="questionVisibilityValue" name="questionVisibilityValue" placeholder="e.g., employed"
+                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="flex justify-end space-x-3">
@@ -266,11 +346,18 @@ function createSectionElement(section, index) {
     div.className = 'border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer';
     div.onclick = () => selectSection(index);
     
+    const visibilityInfo = section.visibleWhen ? 
+        `<div class="mt-1 p-1 bg-blue-50 border border-blue-200 rounded text-xs">
+            <span class="text-blue-600 font-medium">👁️ Visible when:</span> 
+            path "${section.visibleWhen.path}" ${section.visibleWhen.op} "${section.visibleWhen.value}"
+        </div>` : '';
+    
     div.innerHTML = `
         <div class="flex justify-between items-start">
             <div class="flex-1">
                 <h3 class="font-medium text-gray-900">${section.title || 'Untitled Section'}</h3>
                 <p class="text-sm text-gray-600">${section.questions ? section.questions.length : 0} questions</p>
+                ${visibilityInfo}
             </div>
             <div class="flex space-x-1 ml-2">
                 <button onclick="event.stopPropagation(); editSection(${index})" 
@@ -351,6 +438,12 @@ function renderSectionEditor(section, index) {
 }
 
 function createQuestionElement(question, sectionIndex, questionIndex) {
+    const visibilityInfo = question.visibleWhen ? 
+        `<div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+            <span class="text-blue-600 font-medium">👁️ Visible when:</span> 
+            path "${question.visibleWhen.path}" ${question.visibleWhen.op} "${question.visibleWhen.value}"
+        </div>` : '';
+    
     return `
         <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
             <div class="flex justify-between items-start">
@@ -358,6 +451,7 @@ function createQuestionElement(question, sectionIndex, questionIndex) {
                     <h4 class="font-medium text-gray-900">${question.title || 'Untitled Question'}</h4>
                     <p class="text-sm text-gray-600 mb-2">Type: ${question.type || 'text'}</p>
                     ${question.description ? `<p class="text-sm text-gray-500">${question.description}</p>` : ''}
+                    ${visibilityInfo}
                 </div>
                 <div class="flex space-x-2 ml-4">
                     <button onclick="editQuestion(${sectionIndex}, ${questionIndex})" 
@@ -400,6 +494,19 @@ function editSection(index) {
     
     document.getElementById('sectionTitle').value = section.title || '';
     document.getElementById('sectionDescription').value = section.description || '';
+    
+    // Handle visibility controls
+    const hasVisibility = section.visibleWhen && Object.keys(section.visibleWhen).length > 0;
+    document.getElementById('sectionHasVisibility').checked = hasVisibility;
+    
+    if (hasVisibility) {
+        document.getElementById('sectionVisibilityPath').value = section.visibleWhen.path || '';
+        document.getElementById('sectionVisibilityOp').value = section.visibleWhen.op || 'equals';
+        document.getElementById('sectionVisibilityValue').value = section.visibleWhen.value || '';
+        document.getElementById('sectionVisibilityControls').classList.remove('hidden');
+    } else {
+        document.getElementById('sectionVisibilityControls').classList.add('hidden');
+    }
     
     document.getElementById('sectionModal').classList.remove('hidden');
     document.getElementById('sectionModal').classList.add('flex');
@@ -457,6 +564,22 @@ function editQuestion(sectionIndex, questionIndex) {
     if (question.value !== undefined) {
         document.getElementById('questionValue').value = question.value;
     }
+    if (question.key) {
+        document.getElementById('questionKey').value = question.key;
+    }
+    
+    // Handle visibility controls
+    const hasVisibility = question.visibleWhen && Object.keys(question.visibleWhen).length > 0;
+    document.getElementById('questionHasVisibility').checked = hasVisibility;
+    
+    if (hasVisibility) {
+        document.getElementById('questionVisibilityPath').value = question.visibleWhen.path || '';
+        document.getElementById('questionVisibilityOp').value = question.visibleWhen.op || 'equals';
+        document.getElementById('questionVisibilityValue').value = question.visibleWhen.value || '';
+        document.getElementById('questionVisibilityControls').classList.remove('hidden');
+    } else {
+        document.getElementById('questionVisibilityControls').classList.add('hidden');
+    }
     
     document.getElementById('questionModal').classList.remove('hidden');
     document.getElementById('questionModal').classList.add('flex');
@@ -482,12 +605,34 @@ function updateQuestionSpecificFields(type) {
         `;
     }
     
+    if (type === 'toggleList') {
+        html = `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Toggle Options (one per line)</label>
+                <textarea id="questionChoices" name="choices" rows="4"
+                         class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         placeholder="JavaScript&#10;Python&#10;React&#10;Node.js"></textarea>
+            </div>
+        `;
+    }
+    
     if (type === 'text' || type === 'numeric') {
         html += `
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Placeholder</label>
                 <input type="text" id="questionPlaceholder" name="placeholder"
                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        `;
+    }
+    
+    if (type === 'display') {
+        html += `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Display Key</label>
+                <input type="text" id="questionKey" name="key"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="e.g., welcome_text">
             </div>
         `;
     }
@@ -590,8 +735,25 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
     const index = parseInt(this.dataset.editingIndex);
     const formData = new FormData(this);
     
-    currentSchema.answers[index].title = formData.get('title');
-    currentSchema.answers[index].description = formData.get('description');
+    const section = currentSchema.answers[index];
+    section.title = formData.get('title');
+    section.description = formData.get('description');
+    
+    // Handle visibility conditions
+    const hasVisibility = document.getElementById('sectionHasVisibility').checked;
+    if (hasVisibility) {
+        const path = document.getElementById('sectionVisibilityPath').value;
+        const op = document.getElementById('sectionVisibilityOp').value;
+        const value = document.getElementById('sectionVisibilityValue').value;
+        
+        if (path && op && value) {
+            section.visibleWhen = { path, op, value };
+        } else {
+            delete section.visibleWhen;
+        }
+    } else {
+        delete section.visibleWhen;
+    }
     
     renderHierarchy();
     if (selectedSectionIndex === index) {
@@ -616,9 +778,29 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     question.value = formData.get('value');
     question.placeholder = formData.get('placeholder');
     
-    if (question.type === 'choice') {
+    if (question.type === 'choice' || question.type === 'toggleList') {
         const choicesText = formData.get('choices');
         question.choices = choicesText ? choicesText.split('\n').filter(c => c.trim()) : [];
+    }
+    
+    if (question.type === 'display') {
+        question.key = formData.get('key');
+    }
+    
+    // Handle visibility conditions
+    const hasVisibility = document.getElementById('questionHasVisibility').checked;
+    if (hasVisibility) {
+        const path = document.getElementById('questionVisibilityPath').value;
+        const op = document.getElementById('questionVisibilityOp').value;
+        const value = document.getElementById('questionVisibilityValue').value;
+        
+        if (path && op && value) {
+            question.visibleWhen = { path, op, value };
+        } else {
+            delete question.visibleWhen;
+        }
+    } else {
+        delete question.visibleWhen;
     }
     
     // Re-render the section editor
@@ -627,6 +809,37 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     
     hideQuestionModal();
 });
+
+// Visibility control functions
+function toggleSectionVisibility() {
+    const checkbox = document.getElementById('sectionHasVisibility');
+    const controls = document.getElementById('sectionVisibilityControls');
+    
+    if (checkbox.checked) {
+        controls.classList.remove('hidden');
+    } else {
+        controls.classList.add('hidden');
+        // Clear the visibility fields
+        document.getElementById('sectionVisibilityPath').value = '';
+        document.getElementById('sectionVisibilityOp').value = 'equals';
+        document.getElementById('sectionVisibilityValue').value = '';
+    }
+}
+
+function toggleQuestionVisibility() {
+    const checkbox = document.getElementById('questionHasVisibility');
+    const controls = document.getElementById('questionVisibilityControls');
+    
+    if (checkbox.checked) {
+        controls.classList.remove('hidden');
+    } else {
+        controls.classList.add('hidden');
+        // Clear the visibility fields
+        document.getElementById('questionVisibilityPath').value = '';
+        document.getElementById('questionVisibilityOp').value = 'equals';
+        document.getElementById('questionVisibilityValue').value = '';
+    }
+}
 
 // Add CSRF token
 document.addEventListener('DOMContentLoaded', function() {
