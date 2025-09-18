@@ -1,0 +1,643 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Form Editor - {{ form.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ form.name }}</h1>
+                    <p class="text-sm text-gray-600">Form Editor</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="saveForm()" 
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        💾 Save Form
+                    </button>
+                    <a href="/" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                        ← Back to Forms
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex h-[calc(100vh-80px)]">
+        <!-- Left Sidebar - Hierarchy -->
+        <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Form Structure</h2>
+                <button onclick="addNewSection()" 
+                        class="mt-2 w-full bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700">
+                    + Add Section
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4">
+                <div id="hierarchyTree" class="space-y-2">
+                    <!-- Hierarchy will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Center - Main Editor -->
+        <div class="flex-1 flex flex-col">
+            <!-- Editor Header -->
+            <div class="bg-white border-b border-gray-200 p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 id="editorTitle" class="text-xl font-semibold text-gray-900">Select a section to edit</h2>
+                        <p id="editorDescription" class="text-sm text-gray-600">Choose a section from the left sidebar</p>
+                    </div>
+                    <div id="editorActions" class="hidden">
+                        <button onclick="addQuestion()" 
+                                class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700">
+                            + Add Question
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Content -->
+            <div class="flex-1 bg-gray-50 overflow-y-auto">
+                <div id="editorContent" class="p-6">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="text-center text-gray-500 py-12">
+                            <div class="text-6xl mb-4">📝</div>
+                            <h3 class="text-xl font-medium mb-2">No Section Selected</h3>
+                            <p>Select a section from the left sidebar to start editing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - JSON Preview -->
+        <div class="w-96 bg-white border-l border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">JSON Preview</h2>
+                <button onclick="copyJSON()" 
+                        class="mt-2 w-full bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700">
+                    📋 Copy JSON
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4">
+                <pre id="jsonPreview" class="text-xs bg-gray-100 p-3 rounded border overflow-auto whitespace-pre-wrap"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Section Modal -->
+<div id="sectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-semibold mb-4">Edit Section</h3>
+        <form id="sectionForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                <input type="text" id="sectionTitle" name="title" required
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea id="sectionDescription" name="description" rows="3"
+                         class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideSectionModal()"
+                        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Question Modal -->
+<div id="questionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
+        <h3 class="text-lg font-semibold mb-4">Edit Question</h3>
+        <form id="questionForm">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Title</label>
+                    <input type="text" id="questionTitle" name="title" required
+                           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
+                    <select id="questionType" name="type" required
+                            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="text">Text</option>
+                        <option value="numeric">Numeric</option>
+                        <option value="choice">Choice</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="date">Date</option>
+                        <option value="display">Display</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="questionSpecificFields" class="mb-4">
+                <!-- Dynamic fields based on question type -->
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideQuestionModal()"
+                        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Global state
+let currentSchema = {
+    "answers": [],
+    "vars": {},
+    "title": "{{ form.name }}",
+    "description": ""
+};
+
+let selectedSectionIndex = null;
+let editingQuestionIndex = null;
+let nextQuestionId = 1;
+let nextSectionId = 0;
+
+// Initialize the editor
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing data-driven editor...');
+    
+    try {
+        // Parse the form data - it's already a Python dict, so we need to convert it properly
+        const formData = {{ form.data|safe }};
+        
+        if (formData && formData !== null) {
+            if (Array.isArray(formData)) {
+                // Old format - wrap in complete schema
+                currentSchema = {
+                    "answers": formData,
+                    "vars": {},
+                    "title": "{{ form.name }}",
+                    "description": ""
+                };
+            } else {
+                // Complete schema
+                currentSchema = formData;
+            }
+        }
+        
+        console.log('Loaded schema:', currentSchema);
+        
+        // Calculate next IDs
+        calculateNextIds();
+        
+        // Render the hierarchy
+        renderHierarchy();
+        
+        // Update JSON preview
+        updateJSONPreview();
+        
+        console.log('Editor initialized successfully');
+        
+    } catch (error) {
+        console.error('Error initializing editor:', error);
+        alert('Error loading form data: ' + error.message);
+    }
+});
+
+function calculateNextIds() {
+    let maxQuestionId = 0;
+    let maxSectionId = 0;
+    
+    if (currentSchema.answers) {
+        currentSchema.answers.forEach(section => {
+            if (section.id !== undefined && section.id > maxSectionId) {
+                maxSectionId = section.id;
+            }
+            if (section.questions) {
+                section.questions.forEach(question => {
+                    if (question.id !== undefined && question.id > maxQuestionId) {
+                        maxQuestionId = question.id;
+                    }
+                });
+            }
+        });
+    }
+    
+    nextQuestionId = maxQuestionId + 1;
+    nextSectionId = maxSectionId + 1;
+}
+
+function renderHierarchy() {
+    const hierarchyTree = document.getElementById('hierarchyTree');
+    hierarchyTree.innerHTML = '';
+    
+    if (!currentSchema.answers || currentSchema.answers.length === 0) {
+        hierarchyTree.innerHTML = '<p class="text-gray-500 text-sm">No sections yet</p>';
+        return;
+    }
+    
+    currentSchema.answers.forEach((section, index) => {
+        const sectionElement = createSectionElement(section, index);
+        hierarchyTree.appendChild(sectionElement);
+    });
+}
+
+function createSectionElement(section, index) {
+    const div = document.createElement('div');
+    div.className = 'border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer';
+    div.onclick = () => selectSection(index);
+    
+    div.innerHTML = `
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <h3 class="font-medium text-gray-900">${section.title || 'Untitled Section'}</h3>
+                <p class="text-sm text-gray-600">${section.questions ? section.questions.length : 0} questions</p>
+            </div>
+            <div class="flex space-x-1 ml-2">
+                <button onclick="event.stopPropagation(); editSection(${index})" 
+                        class="text-blue-500 hover:text-blue-600 text-xs">
+                    ✏️
+                </button>
+                <button onclick="event.stopPropagation(); deleteSection(${index})" 
+                        class="text-red-500 hover:text-red-600 text-xs">
+                    🗑️
+                </button>
+            </div>
+        </div>
+    `;
+    
+    return div;
+}
+
+function selectSection(index) {
+    selectedSectionIndex = index;
+    const section = currentSchema.answers[index];
+    
+    // Update editor header
+    document.getElementById('editorTitle').textContent = section.title || 'Untitled Section';
+    document.getElementById('editorDescription').textContent = section.description || 'No description';
+    document.getElementById('editorActions').classList.remove('hidden');
+    
+    // Render section editor
+    renderSectionEditor(section, index);
+    
+    // Update hierarchy selection
+    updateHierarchySelection();
+}
+
+function updateHierarchySelection() {
+    const elements = document.querySelectorAll('#hierarchyTree > div');
+    elements.forEach((el, index) => {
+        if (index === selectedSectionIndex) {
+            el.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50');
+        } else {
+            el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+        }
+    });
+}
+
+function renderSectionEditor(section, index) {
+    const editorContent = document.getElementById('editorContent');
+    
+    let questionsHtml = '';
+    if (section.questions && section.questions.length > 0) {
+        questionsHtml = section.questions.map((question, qIndex) => 
+            createQuestionElement(question, index, qIndex)
+        ).join('');
+    } else {
+        questionsHtml = '<div class="text-center text-gray-500 py-8"><p>No questions yet. Click "Add Question" to get started.</p></div>';
+    }
+    
+    editorContent.innerHTML = `
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-2">${section.title || 'Untitled Section'}</h2>
+                    <p class="text-gray-600">${section.description || 'No description'}</p>
+                </div>
+                
+                <div class="space-y-4">
+                    ${questionsHtml}
+                </div>
+                
+                <div class="mt-6">
+                    <button onclick="addQuestion()" 
+                            class="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 hover:bg-gray-50 text-gray-600">
+                        + Add Question
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createQuestionElement(question, sectionIndex, questionIndex) {
+    return `
+        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h4 class="font-medium text-gray-900">${question.title || 'Untitled Question'}</h4>
+                    <p class="text-sm text-gray-600 mb-2">Type: ${question.type || 'text'}</p>
+                    ${question.description ? `<p class="text-sm text-gray-500">${question.description}</p>` : ''}
+                </div>
+                <div class="flex space-x-2 ml-4">
+                    <button onclick="editQuestion(${sectionIndex}, ${questionIndex})" 
+                            class="text-blue-500 hover:text-blue-600 text-sm">
+                        ✏️ Edit
+                    </button>
+                    <button onclick="deleteQuestion(${sectionIndex}, ${questionIndex})" 
+                            class="text-red-500 hover:text-red-600 text-sm">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function addNewSection() {
+    const newSection = {
+        id: nextSectionId++,
+        title: `Section ${nextSectionId}`,
+        type: 'form',
+        description: '',
+        questions: []
+    };
+    
+    if (!currentSchema.answers) {
+        currentSchema.answers = [];
+    }
+    
+    currentSchema.answers.push(newSection);
+    renderHierarchy();
+    updateJSONPreview();
+    
+    // Select the new section
+    selectSection(currentSchema.answers.length - 1);
+}
+
+function editSection(index) {
+    const section = currentSchema.answers[index];
+    
+    document.getElementById('sectionTitle').value = section.title || '';
+    document.getElementById('sectionDescription').value = section.description || '';
+    
+    document.getElementById('sectionModal').classList.remove('hidden');
+    document.getElementById('sectionModal').classList.add('flex');
+    
+    // Store the editing index
+    document.getElementById('sectionForm').dataset.editingIndex = index;
+}
+
+function hideSectionModal() {
+    document.getElementById('sectionModal').classList.add('hidden');
+    document.getElementById('sectionModal').classList.remove('flex');
+}
+
+function addQuestion() {
+    if (selectedSectionIndex === null) {
+        alert('Please select a section first');
+        return;
+    }
+    
+    const newQuestion = {
+        id: nextQuestionId++,
+        title: 'New Question',
+        type: 'text',
+        value: '',
+        placeholder: ''
+    };
+    
+    if (!currentSchema.answers[selectedSectionIndex].questions) {
+        currentSchema.answers[selectedSectionIndex].questions = [];
+    }
+    
+    currentSchema.answers[selectedSectionIndex].questions.push(newQuestion);
+    
+    // Re-render the section editor
+    renderSectionEditor(currentSchema.answers[selectedSectionIndex], selectedSectionIndex);
+    updateJSONPreview();
+}
+
+function editQuestion(sectionIndex, questionIndex) {
+    const question = currentSchema.answers[sectionIndex].questions[questionIndex];
+    
+    document.getElementById('questionTitle').value = question.title || '';
+    document.getElementById('questionType').value = question.type || 'text';
+    
+    // Update specific fields based on type
+    updateQuestionSpecificFields(question.type || 'text');
+    
+    // Set values for specific fields
+    if (question.choices) {
+        document.getElementById('questionChoices').value = question.choices.join('\n');
+    }
+    if (question.placeholder) {
+        document.getElementById('questionPlaceholder').value = question.placeholder;
+    }
+    if (question.value !== undefined) {
+        document.getElementById('questionValue').value = question.value;
+    }
+    
+    document.getElementById('questionModal').classList.remove('hidden');
+    document.getElementById('questionModal').classList.add('flex');
+    
+    // Store the editing indices
+    document.getElementById('questionForm').dataset.sectionIndex = sectionIndex;
+    document.getElementById('questionForm').dataset.questionIndex = questionIndex;
+}
+
+function updateQuestionSpecificFields(type) {
+    const container = document.getElementById('questionSpecificFields');
+    
+    let html = '';
+    
+    if (type === 'choice') {
+        html = `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Choices (one per line)</label>
+                <textarea id="questionChoices" name="choices" rows="4"
+                         class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+            </div>
+        `;
+    }
+    
+    if (type === 'text' || type === 'numeric') {
+        html += `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Placeholder</label>
+                <input type="text" id="questionPlaceholder" name="placeholder"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        `;
+    }
+    
+    html += `
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Default Value</label>
+            <input type="text" id="questionValue" name="value"
+                   class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function hideQuestionModal() {
+    document.getElementById('questionModal').classList.add('hidden');
+    document.getElementById('questionModal').classList.remove('flex');
+}
+
+function deleteSection(index) {
+    if (confirm('Are you sure you want to delete this section? This will also delete all questions in this section.')) {
+        currentSchema.answers.splice(index, 1);
+        
+        // Reset selection if deleted section was selected
+        if (selectedSectionIndex === index) {
+            selectedSectionIndex = null;
+            document.getElementById('editorTitle').textContent = 'Select a section to edit';
+            document.getElementById('editorDescription').textContent = 'Choose a section from the left sidebar';
+            document.getElementById('editorActions').classList.add('hidden');
+            document.getElementById('editorContent').innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center text-gray-500 py-12">
+                        <div class="text-6xl mb-4">📝</div>
+                        <h3 class="text-xl font-medium mb-2">No Section Selected</h3>
+                        <p>Select a section from the left sidebar to start editing</p>
+                    </div>
+                </div>
+            `;
+        } else if (selectedSectionIndex > index) {
+            selectedSectionIndex--;
+        }
+        
+        renderHierarchy();
+        updateJSONPreview();
+    }
+}
+
+function deleteQuestion(sectionIndex, questionIndex) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        currentSchema.answers[sectionIndex].questions.splice(questionIndex, 1);
+        
+        // Re-render the section editor
+        renderSectionEditor(currentSchema.answers[sectionIndex], sectionIndex);
+        updateJSONPreview();
+    }
+}
+
+function updateJSONPreview() {
+    const jsonPreview = document.getElementById('jsonPreview');
+    jsonPreview.textContent = JSON.stringify(currentSchema, null, 2);
+}
+
+function copyJSON() {
+    const jsonText = JSON.stringify(currentSchema, null, 2);
+    navigator.clipboard.writeText(jsonText).then(() => {
+        alert('JSON copied to clipboard!');
+    });
+}
+
+function saveForm() {
+    const formData = new FormData();
+    formData.append('schema', JSON.stringify(currentSchema));
+    
+    fetch(`/api/save-form/{{ form.id }}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Form saved successfully!');
+        } else {
+            alert('Error saving form: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving form: ' + error.message);
+    });
+}
+
+// Event listeners
+document.getElementById('sectionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const index = parseInt(this.dataset.editingIndex);
+    const formData = new FormData(this);
+    
+    currentSchema.answers[index].title = formData.get('title');
+    currentSchema.answers[index].description = formData.get('description');
+    
+    renderHierarchy();
+    if (selectedSectionIndex === index) {
+        renderSectionEditor(currentSchema.answers[index], index);
+    }
+    updateJSONPreview();
+    
+    hideSectionModal();
+});
+
+document.getElementById('questionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const sectionIndex = parseInt(this.dataset.sectionIndex);
+    const questionIndex = parseInt(this.dataset.questionIndex);
+    const formData = new FormData(this);
+    
+    const question = currentSchema.answers[sectionIndex].questions[questionIndex];
+    
+    question.title = formData.get('title');
+    question.type = formData.get('type');
+    question.value = formData.get('value');
+    question.placeholder = formData.get('placeholder');
+    
+    if (question.type === 'choice') {
+        const choicesText = formData.get('choices');
+        question.choices = choicesText ? choicesText.split('\n').filter(c => c.trim()) : [];
+    }
+    
+    // Re-render the section editor
+    renderSectionEditor(currentSchema.answers[sectionIndex], sectionIndex);
+    updateJSONPreview();
+    
+    hideQuestionModal();
+});
+
+// Add CSRF token
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfToken) {
+        const token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = 'csrfmiddlewaretoken';
+        token.value = '{{ csrf_token }}';
+        document.body.appendChild(token);
+    }
+});
+</script>
+{% endblock %}

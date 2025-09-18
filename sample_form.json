@@ -1,0 +1,106 @@
+{
+  "answers": [
+    {
+      "id": 0,
+      "title": "Personal Information",
+      "type": "form",
+      "description": "Basic personal details",
+      "questions": [
+        {
+          "id": 1,
+          "title": "Full Name",
+          "type": "text",
+          "value": "",
+          "placeholder": "Enter your full name"
+        },
+        {
+          "id": 2,
+          "title": "Email Address",
+          "type": "text",
+          "value": "",
+          "placeholder": "Enter your email"
+        },
+        {
+          "id": 3,
+          "title": "Age",
+          "type": "numeric",
+          "value": "",
+          "placeholder": "Enter your age"
+        },
+        {
+          "id": 4,
+          "title": "Employment Status",
+          "type": "choice",
+          "value": "",
+          "choices": ["employed", "student", "unemployed", "retired"]
+        },
+        {
+          "id": 5,
+          "title": "Company Name",
+          "type": "text",
+          "value": "",
+          "placeholder": "Enter your company name",
+          "visibleWhen": {
+            "path": "4",
+            "op": "equals",
+            "value": "employed"
+          }
+        },
+        {
+          "id": 6,
+          "title": "Skills",
+          "type": "toggleList",
+          "value": "",
+          "choices": ["JavaScript", "Python", "React", "Node.js", "Django", "Vue.js"]
+        },
+        {
+          "id": 7,
+          "title": "Is Senior Developer",
+          "type": "boolean",
+          "value": false,
+          "visibleWhen": {
+            "path": "6",
+            "op": "contains",
+            "value": "JavaScript"
+          }
+        },
+        {
+          "id": 8,
+          "title": "Years of Experience",
+          "type": "numeric",
+          "value": "",
+          "placeholder": "Enter years of experience",
+          "visibleWhen": {
+            "path": "7",
+            "op": "equals",
+            "value": true
+          }
+        },
+        {
+          "id": "title",
+          "title": "Additional Information",
+          "type": "title",
+          "value": "Please provide any additional information"
+        },
+        {
+          "id": 9,
+          "title": "Birth Date",
+          "type": "date",
+          "value": ""
+        },
+        {
+          "id": 10,
+          "title": "Welcome Message",
+          "type": "display",
+          "key": "welcome_text"
+        }
+      ]
+    }
+  ],
+  "vars": {
+    "welcome_text": "Welcome to our survey! Thank you for participating.",
+    "company_name": "Acme Corporation"
+  },
+  "title": "Employee Survey Form",
+  "description": "A comprehensive survey to collect employee information and preferences"
+}

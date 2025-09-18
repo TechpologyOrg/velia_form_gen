@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+{% block title %}Velia Form Generator{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Velia Form Generator</h1>
+                    <p class="text-gray-600 mt-1">Create interactive forms with conditional logic</p>
+                </div>
+                <div class="text-sm text-gray-500">
+                    Build forms that adapt to user input
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Organizations Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Organizations</h2>
+                        
+                        {% if orgs %}
+                            <div class="space-y-3">
+                                {% for org in orgs %}
+                                    <div class="border border-gray-200 rounded-lg">
+                                        <div class="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                                             onclick="toggleOrgForms({{ org.id }})">
+                                            <div class="flex justify-between items-center">
+                                                <h3 class="font-medium text-gray-900">{{ org.name }}</h3>
+                                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" 
+                                                     id="arrow-{{ org.id }}" 
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="org_forms_{{ org.id }}" class="hidden border-t border-gray-200 p-4">
+                                            <!-- Forms will be loaded here -->
+                                            <div class="text-center py-4">
+                                                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                                                <p class="text-sm text-gray-500 mt-2">Loading forms...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <div class="text-gray-400 mb-4">
+                                    <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-500 mb-4">No organizations found</p>
+                                <p class="text-sm text-gray-400">Create an organization in the Django admin to get started</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div class="text-center">
+                        <div class="text-gray-400 mb-6">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Welcome to Velia Form Generator</h3>
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                            Create dynamic, interactive forms with conditional logic. Select an organization from the sidebar to view and create forms.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">📝 Multiple Question Types</h4>
+                                <p class="text-sm text-gray-600">Text, numeric, choice, boolean, date, display, multi-select, and title fields</p>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">🔗 Conditional Logic</h4>
+                                <p class="text-sm text-gray-600">Show/hide questions based on user responses with complex conditions</p>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">📊 Variables & References</h4>
+                                <p class="text-sm text-gray-600">Use variables and cross-form references for dynamic content</p>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">🎨 Visual Builder</h4>
+                                <p class="text-sm text-gray-600">Drag-and-drop interface with real-time JSON preview</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Form Modal -->
+<div id="createFormModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
+        <h3 class="text-lg font-semibold mb-4">Create New Form</h3>
+        <form id="createFormForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Form Name</label>
+                <input type="text" id="formName" name="name" 
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter form name" required>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideCreateFormModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    Create Form
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Import Form Modal -->
+<div id="importFormModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
+        <h3 class="text-lg font-semibold mb-4">Import Form from JSON</h3>
+        <form id="importFormForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Form Name</label>
+                <input type="text" id="importFormName" name="name" 
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter form name" required>
+            </div>
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Form Data</label>
+                    <button type="button" onclick="loadExampleData()" 
+                            class="text-blue-500 hover:text-blue-600 text-sm">
+                        📋 Load Example
+                    </button>
+                </div>
+                <textarea id="importJsonData" name="json_data" 
+                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                          rows="15" 
+                          placeholder="Paste your answers array or complete JSON schema here..."
+                          required></textarea>
+                <p class="text-xs text-gray-500 mt-1">
+                    You can paste just the answers array, or a complete JSON schema. The system will automatically wrap answers arrays in a complete schema structure.
+                </p>
+            </div>
+            <div class="mb-4">
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="validateJson" checked class="rounded">
+                    <label for="validateJson" class="text-sm text-gray-700">Validate JSON before importing</label>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideImportFormModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="button" onclick="validateJsonData()" 
+                        class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                    Validate JSON
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Import Form
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleOrgForms(orgId) {
+    const target = document.getElementById(`org_forms_${orgId}`);
+    const arrow = document.getElementById(`arrow-${orgId}`);
+    
+    if (target.classList.contains('hidden')) {
+        // Show forms
+        target.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+        
+        // Load forms if not already loaded
+        if (target.innerHTML.includes('Loading forms...')) {
+            loadOrgForms(orgId);
+        }
+    } else {
+        // Hide forms
+        target.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+function loadOrgForms(orgId) {
+    const target = document.getElementById(`org_forms_${orgId}`);
+    
+    fetch(`{% url 'get_forms' 0 %}`.replace('0', orgId))
+        .then(response => response.text())
+        .then(html => { 
+            target.innerHTML = html; 
+        })
+        .catch(error => {
+            target.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-red-500 text-sm">Error loading forms</p>
+                </div>
+            `;
+        });
+}
+
+function showCreateFormModal(orgId) {
+    document.getElementById('createFormModal').classList.remove('hidden');
+    document.getElementById('createFormModal').classList.add('flex');
+    document.getElementById('createFormForm').dataset.orgId = orgId;
+}
+
+function hideCreateFormModal() {
+    document.getElementById('createFormModal').classList.add('hidden');
+    document.getElementById('createFormModal').classList.remove('flex');
+    document.getElementById('createFormForm').reset();
+}
+
+function showImportFormModal(orgId) {
+    document.getElementById('importFormModal').classList.remove('hidden');
+    document.getElementById('importFormModal').classList.add('flex');
+    document.getElementById('importFormForm').dataset.orgId = orgId;
+}
+
+function hideImportFormModal() {
+    document.getElementById('importFormModal').classList.add('hidden');
+    document.getElementById('importFormModal').classList.remove('flex');
+    document.getElementById('importFormForm').reset();
+}
+
+function loadExampleData() {
+    const exampleData = `[
+  {
+    "id": 0,
+    "title": "Contact Information",
+    "type": "form",
+    "description": "Basic contact details",
+    "questions": [
+      {
+        "id": 1,
+        "title": "Full Name",
+        "type": "text",
+        "value": "",
+        "placeholder": "Enter your full name"
+      },
+      {
+        "id": 2,
+        "title": "Email",
+        "type": "text",
+        "value": "",
+        "placeholder": "Enter your email address"
+      },
+      {
+        "id": 3,
+        "title": "Phone Number",
+        "type": "text",
+        "value": "",
+        "placeholder": "Enter your phone number"
+      },
+      {
+        "id": 4,
+        "title": "Preferred Contact Method",
+        "type": "choice",
+        "value": "",
+        "choices": ["email", "phone", "text", "mail"]
+      },
+      {
+        "id": 5,
+        "title": "Best Time to Contact",
+        "type": "choice",
+        "value": "",
+        "choices": ["morning", "afternoon", "evening", "anytime"]
+      },
+      {
+        "id": 6,
+        "title": "Subscribe to Newsletter",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "id": 7,
+        "title": "Newsletter Frequency",
+        "type": "choice",
+        "value": "",
+        "choices": ["daily", "weekly", "monthly"],
+        "visibleWhen": {
+          "path": "6",
+          "op": "equals",
+          "value": true
+        }
+      }
+    ]
+  }
+]`;
+    
+    document.getElementById('importJsonData').value = exampleData;
+    document.getElementById('importFormName').value = 'Contact Form';
+}
+
+function validateJsonData() {
+    const jsonData = document.getElementById('importJsonData').value.trim();
+    
+    if (!jsonData) {
+        alert('Please enter JSON data to validate.');
+        return;
+    }
+    
+    try {
+        const parsed = JSON.parse(jsonData);
+        let schemaToValidate = parsed;
+        
+        // If it's just an answers array, wrap it in a complete schema
+        if (Array.isArray(parsed)) {
+            schemaToValidate = {
+                answers: parsed,
+                vars: {},
+                title: document.getElementById('importFormName').value || 'Imported Form',
+                description: ''
+            };
+        }
+        
+        // Basic schema validation
+        const errors = [];
+        
+        if (!schemaToValidate.answers || !Array.isArray(schemaToValidate.answers)) {
+            errors.push('Missing or invalid "answers" array');
+        }
+        
+        if (schemaToValidate.answers && schemaToValidate.answers.length > 0) {
+            schemaToValidate.answers.forEach((form, index) => {
+                if (!form.id && form.id !== 0) {
+                    errors.push(`Form ${index}: Missing "id" field`);
+                }
+                if (!form.title) {
+                    errors.push(`Form ${index}: Missing "title" field`);
+                }
+                if (!form.type || form.type !== 'form') {
+                    errors.push(`Form ${index}: Missing or invalid "type" field (should be "form")`);
+                }
+                if (!form.questions || !Array.isArray(form.questions)) {
+                    errors.push(`Form ${index}: Missing or invalid "questions" array`);
+                }
+                
+                if (form.questions) {
+                    form.questions.forEach((question, qIndex) => {
+                        if (!question.id && question.id !== 0) {
+                            errors.push(`Form ${index}, Question ${qIndex}: Missing "id" field`);
+                        }
+                        if (!question.title) {
+                            errors.push(`Form ${index}, Question ${qIndex}: Missing "title" field`);
+                        }
+                        if (!question.type) {
+                            errors.push(`Form ${index}, Question ${qIndex}: Missing "type" field`);
+                        }
+                    });
+                }
+            });
+        }
+        
+        if (errors.length > 0) {
+            alert('JSON Validation Errors:\n\n' + errors.join('\n'));
+        } else {
+            const dataType = Array.isArray(parsed) ? 'answers array' : 'complete schema';
+            alert(`✅ JSON is valid! Detected: ${dataType}`);
+        }
+        
+    } catch (error) {
+        alert('❌ Invalid JSON: ' + error.message);
+    }
+}
+
+// Form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('createFormForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('formName').value,
+            organisation_id: this.dataset.orgId
+        };
+        
+        try {
+            const response = await fetch('/api/create-form/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                hideCreateFormModal();
+                window.location.href = result.redirect_url;
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error creating form: ' + error.message);
+        }
+    });
+
+    document.getElementById('importFormForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formName = document.getElementById('importFormName').value;
+        const jsonData = document.getElementById('importJsonData').value.trim();
+        const validateJson = document.getElementById('validateJson').checked;
+        
+        if (!formName || !jsonData) {
+            alert('Please fill in both form name and JSON data.');
+            return;
+        }
+        
+        // Parse and prepare the JSON data
+        let finalJsonData;
+        try {
+            const parsed = JSON.parse(jsonData);
+            
+            // If it's just an answers array, wrap it in a complete schema
+            if (Array.isArray(parsed)) {
+                finalJsonData = JSON.stringify({
+                    answers: parsed,
+                    vars: {},
+                    title: formName,
+                    description: ''
+                });
+            } else {
+                // It's already a complete schema, use as-is
+                finalJsonData = jsonData;
+            }
+            
+            // Validate JSON if checkbox is checked
+            if (validateJson) {
+                const schemaToValidate = JSON.parse(finalJsonData);
+                if (!schemaToValidate.answers || !Array.isArray(schemaToValidate.answers)) {
+                    alert('Invalid JSON: Missing or invalid "answers" array');
+                    return;
+                }
+            }
+        } catch (error) {
+            alert('Invalid JSON: ' + error.message);
+            return;
+        }
+        
+        const formData = {
+            name: formName,
+            organisation_id: this.dataset.orgId,
+            json_data: finalJsonData
+        };
+        
+        try {
+            const response = await fetch('/api/import-form/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                hideImportFormModal();
+                window.location.href = result.redirect_url;
+            } else {
+                alert('Error importing form: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error importing form: ' + error.message);
+        }
+    });
+});
+
+// Delete form function
+async function deleteForm(formId, formName) {
+    if (!confirm(`Are you sure you want to delete the form "${formName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/delete-form/${formId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Form deleted successfully!');
+            // Reload the forms for the organization
+            loadOrgForms(result.org_id);
+        } else {
+            alert('Error deleting form: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error deleting form: ' + error.message);
+    }
+}
+</script>
+{% endblock %}

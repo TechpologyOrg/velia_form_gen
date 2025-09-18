@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Velia Form Generator{% endblock %}</title>
+
+        <!-- HTMX -->
+        <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+        <!-- CSRF for HTMX requests -->
+        {% csrf_token %}
+        <meta name="csrf-token" content="{{ csrf_token }}">
+
+        <script>
+          document.addEventListener("htmx:configRequest", (evt) => {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
+            if (token) evt.detail.headers["X-CSRFToken"] = token;
+          });
+        </script>
+
+        <style>
+            /* Custom scrollbar */
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 3px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100">
+        {% block content %}{% endblock %}
+    </body>
+</html>

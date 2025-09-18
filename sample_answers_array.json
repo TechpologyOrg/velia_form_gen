@@ -1,0 +1,63 @@
+[
+  {
+    "id": 0,
+    "title": "Contact Information",
+    "type": "form",
+    "description": "Basic contact details",
+    "questions": [
+      {
+        "id": 1,
+        "title": "Full Name",
+        "type": "text",
+        "value": "",
+        "placeholder": "Enter your full name"
+      },
+      {
+        "id": 2,
+        "title": "Email",
+        "type": "text",
+        "value": "",
+        "placeholder": "Enter your email address"
+      },
+      {
+        "id": 3,
+        "title": "Phone Number",
+        "type": "text",
+        "value": "",
+        "placeholder": "Enter your phone number"
+      },
+      {
+        "id": 4,
+        "title": "Preferred Contact Method",
+        "type": "choice",
+        "value": "",
+        "choices": ["email", "phone", "text", "mail"]
+      },
+      {
+        "id": 5,
+        "title": "Best Time to Contact",
+        "type": "choice",
+        "value": "",
+        "choices": ["morning", "afternoon", "evening", "anytime"]
+      },
+      {
+        "id": 6,
+        "title": "Subscribe to Newsletter",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "id": 7,
+        "title": "Newsletter Frequency",
+        "type": "choice",
+        "value": "",
+        "choices": ["daily", "weekly", "monthly"],
+        "visibleWhen": {
+          "path": "6",
+          "op": "equals",
+          "value": true
+        }
+      }
+    ]
+  }
+]
