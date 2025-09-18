@@ -122,29 +122,65 @@
                     </div>
                     
                     <div id="sectionVisibilityControls" class="hidden space-y-3 pl-6 border-l-2 border-gray-200">
-                        <div class="grid grid-cols-3 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
-                                <input type="text" id="sectionVisibilityPath" name="visibilityPath" placeholder="e.g., 4"
-                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Condition Type</label>
+                            <select id="sectionVisibilityType" name="visibilityType" onchange="updateSectionVisibilityType()"
+                                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="simple">Simple Condition</option>
+                                <option value="allOf">Multiple Conditions (AND)</option>
+                                <option value="anyOf">Multiple Conditions (OR)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="sectionSimpleCondition" class="space-y-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                                    <input type="text" id="sectionVisibilityPath" name="visibilityPath" placeholder="e.g., 4"
+                                           class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                                    <select id="sectionVisibilityOp" name="visibilityOp"
+                                            class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        <option value="equals">equals</option>
+                                        <option value="not_equals">not equals</option>
+                                        <option value="contains">contains</option>
+                                        <option value="not_contains">not contains</option>
+                                        <option value="greater_than">greater than</option>
+                                        <option value="less_than">less than</option>
+                                        <option value="greaterThanOrEqual">greater than or equal</option>
+                                        <option value="lessThanOrEqual">less than or equal</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                                    <input type="text" id="sectionVisibilityValue" name="visibilityValue" placeholder="e.g., employed"
+                                           class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
-                                <select id="sectionVisibilityOp" name="visibilityOp"
-                                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                                    <option value="equals">equals</option>
-                                    <option value="not_equals">not equals</option>
-                                    <option value="contains">contains</option>
-                                    <option value="not_contains">not contains</option>
-                                    <option value="greater_than">greater than</option>
-                                    <option value="less_than">less than</option>
-                                </select>
+                        </div>
+                        
+                        <div id="sectionAllOfConditions" class="hidden space-y-3">
+                            <div class="text-xs text-gray-600 mb-2">All conditions must be true (AND logic)</div>
+                            <div id="sectionConditionsList" class="space-y-2">
+                                <!-- Dynamic conditions will be added here -->
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
-                                <input type="text" id="sectionVisibilityValue" name="visibilityValue" placeholder="e.g., employed"
-                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <button type="button" onclick="addSectionCondition()" 
+                                    class="text-blue-500 hover:text-blue-600 text-sm">
+                                + Add Condition
+                            </button>
+                        </div>
+                        
+                        <div id="sectionAnyOfConditions" class="hidden space-y-3">
+                            <div class="text-xs text-gray-600 mb-2">Any condition can be true (OR logic)</div>
+                            <div id="sectionAnyOfConditionsList" class="space-y-2">
+                                <!-- Dynamic conditions will be added here -->
                             </div>
+                            <button type="button" onclick="addSectionAnyOfCondition()" 
+                                    class="text-blue-500 hover:text-blue-600 text-sm">
+                                + Add Condition
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -205,29 +241,65 @@
                     </div>
                     
                     <div id="questionVisibilityControls" class="hidden space-y-3 pl-6 border-l-2 border-gray-200">
-                        <div class="grid grid-cols-3 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
-                                <input type="text" id="questionVisibilityPath" name="questionVisibilityPath" placeholder="e.g., 4"
-                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Condition Type</label>
+                            <select id="questionVisibilityType" name="questionVisibilityType" onchange="updateQuestionVisibilityType()"
+                                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="simple">Simple Condition</option>
+                                <option value="allOf">Multiple Conditions (AND)</option>
+                                <option value="anyOf">Multiple Conditions (OR)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="questionSimpleCondition" class="space-y-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                                    <input type="text" id="questionVisibilityPath" name="questionVisibilityPath" placeholder="e.g., 4"
+                                           class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                                    <select id="questionVisibilityOp" name="questionVisibilityOp"
+                                            class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        <option value="equals">equals</option>
+                                        <option value="not_equals">not equals</option>
+                                        <option value="contains">contains</option>
+                                        <option value="not_contains">not contains</option>
+                                        <option value="greater_than">greater than</option>
+                                        <option value="less_than">less than</option>
+                                        <option value="greaterThanOrEqual">greater than or equal</option>
+                                        <option value="lessThanOrEqual">less than or equal</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                                    <input type="text" id="questionVisibilityValue" name="questionVisibilityValue" placeholder="e.g., employed"
+                                           class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
-                                <select id="questionVisibilityOp" name="questionVisibilityOp"
-                                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                                    <option value="equals">equals</option>
-                                    <option value="not_equals">not equals</option>
-                                    <option value="contains">contains</option>
-                                    <option value="not_contains">not contains</option>
-                                    <option value="greater_than">greater than</option>
-                                    <option value="less_than">less than</option>
-                                </select>
+                        </div>
+                        
+                        <div id="questionAllOfConditions" class="hidden space-y-3">
+                            <div class="text-xs text-gray-600 mb-2">All conditions must be true (AND logic)</div>
+                            <div id="questionConditionsList" class="space-y-2">
+                                <!-- Dynamic conditions will be added here -->
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
-                                <input type="text" id="questionVisibilityValue" name="questionVisibilityValue" placeholder="e.g., employed"
-                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <button type="button" onclick="addQuestionCondition()" 
+                                    class="text-blue-500 hover:text-blue-600 text-sm">
+                                + Add Condition
+                            </button>
+                        </div>
+                        
+                        <div id="questionAnyOfConditions" class="hidden space-y-3">
+                            <div class="text-xs text-gray-600 mb-2">Any condition can be true (OR logic)</div>
+                            <div id="questionAnyOfConditionsList" class="space-y-2">
+                                <!-- Dynamic conditions will be added here -->
                             </div>
+                            <button type="button" onclick="addQuestionAnyOfCondition()" 
+                                    class="text-blue-500 hover:text-blue-600 text-sm">
+                                + Add Condition
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -349,7 +421,12 @@ function createSectionElement(section, index) {
     const visibilityInfo = section.visibleWhen ? 
         `<div class="mt-1 p-1 bg-blue-50 border border-blue-200 rounded text-xs">
             <span class="text-blue-600 font-medium">👁️ Visible when:</span> 
-            path "${section.visibleWhen.path}" ${section.visibleWhen.op} "${section.visibleWhen.value}"
+            ${section.visibleWhen.allOf ? 
+                `All conditions must be true: ${section.visibleWhen.allOf.map(c => `path "${c.path}" ${c.op} "${c.value}"`).join(' AND ')}` :
+                section.visibleWhen.anyOf ?
+                `Any condition can be true: ${section.visibleWhen.anyOf.map(c => `path "${c.path}" ${c.op} "${c.value}"`).join(' OR ')}` :
+                `path "${section.visibleWhen.path}" ${section.visibleWhen.op} "${section.visibleWhen.value}"`
+            }
         </div>` : '';
     
     div.innerHTML = `
@@ -441,7 +518,12 @@ function createQuestionElement(question, sectionIndex, questionIndex) {
     const visibilityInfo = question.visibleWhen ? 
         `<div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
             <span class="text-blue-600 font-medium">👁️ Visible when:</span> 
-            path "${question.visibleWhen.path}" ${question.visibleWhen.op} "${question.visibleWhen.value}"
+            ${question.visibleWhen.allOf ? 
+                `All conditions must be true: ${question.visibleWhen.allOf.map(c => `path "${c.path}" ${c.op} "${c.value}"`).join(' AND ')}` :
+                question.visibleWhen.anyOf ?
+                `Any condition can be true: ${question.visibleWhen.anyOf.map(c => `path "${c.path}" ${c.op} "${c.value}"`).join(' OR ')}` :
+                `path "${question.visibleWhen.path}" ${question.visibleWhen.op} "${question.visibleWhen.value}"`
+            }
         </div>` : '';
     
     return `
@@ -500,10 +582,48 @@ function editSection(index) {
     document.getElementById('sectionHasVisibility').checked = hasVisibility;
     
     if (hasVisibility) {
-        document.getElementById('sectionVisibilityPath').value = section.visibleWhen.path || '';
-        document.getElementById('sectionVisibilityOp').value = section.visibleWhen.op || 'equals';
-        document.getElementById('sectionVisibilityValue').value = section.visibleWhen.value || '';
         document.getElementById('sectionVisibilityControls').classList.remove('hidden');
+        
+        if (section.visibleWhen.allOf) {
+            // Multiple conditions (allOf)
+            document.getElementById('sectionVisibilityType').value = 'allOf';
+            updateSectionVisibilityType();
+            
+            // Clear existing conditions
+            document.getElementById('sectionConditionsList').innerHTML = '';
+            
+            // Add each condition
+            section.visibleWhen.allOf.forEach(condition => {
+                addSectionCondition();
+                const lastCondition = document.getElementById('sectionConditionsList').lastElementChild;
+                lastCondition.querySelector('input[name="sectionConditionPath"]').value = condition.path || '';
+                lastCondition.querySelector('select[name="sectionConditionOp"]').value = condition.op || 'equals';
+                lastCondition.querySelector('input[name="sectionConditionValue"]').value = condition.value || '';
+            });
+        } else if (section.visibleWhen.anyOf) {
+            // Multiple conditions (anyOf)
+            document.getElementById('sectionVisibilityType').value = 'anyOf';
+            updateSectionVisibilityType();
+            
+            // Clear existing conditions
+            document.getElementById('sectionAnyOfConditionsList').innerHTML = '';
+            
+            // Add each condition
+            section.visibleWhen.anyOf.forEach(condition => {
+                addSectionAnyOfCondition();
+                const lastCondition = document.getElementById('sectionAnyOfConditionsList').lastElementChild;
+                lastCondition.querySelector('input[name="sectionAnyOfConditionPath"]').value = condition.path || '';
+                lastCondition.querySelector('select[name="sectionAnyOfConditionOp"]').value = condition.op || 'equals';
+                lastCondition.querySelector('input[name="sectionAnyOfConditionValue"]').value = condition.value || '';
+            });
+        } else {
+            // Simple condition
+            document.getElementById('sectionVisibilityType').value = 'simple';
+            updateSectionVisibilityType();
+            document.getElementById('sectionVisibilityPath').value = section.visibleWhen.path || '';
+            document.getElementById('sectionVisibilityOp').value = section.visibleWhen.op || 'equals';
+            document.getElementById('sectionVisibilityValue').value = section.visibleWhen.value || '';
+        }
     } else {
         document.getElementById('sectionVisibilityControls').classList.add('hidden');
     }
@@ -573,10 +693,48 @@ function editQuestion(sectionIndex, questionIndex) {
     document.getElementById('questionHasVisibility').checked = hasVisibility;
     
     if (hasVisibility) {
-        document.getElementById('questionVisibilityPath').value = question.visibleWhen.path || '';
-        document.getElementById('questionVisibilityOp').value = question.visibleWhen.op || 'equals';
-        document.getElementById('questionVisibilityValue').value = question.visibleWhen.value || '';
         document.getElementById('questionVisibilityControls').classList.remove('hidden');
+        
+        if (question.visibleWhen.allOf) {
+            // Multiple conditions (allOf)
+            document.getElementById('questionVisibilityType').value = 'allOf';
+            updateQuestionVisibilityType();
+            
+            // Clear existing conditions
+            document.getElementById('questionConditionsList').innerHTML = '';
+            
+            // Add each condition
+            question.visibleWhen.allOf.forEach(condition => {
+                addQuestionCondition();
+                const lastCondition = document.getElementById('questionConditionsList').lastElementChild;
+                lastCondition.querySelector('input[name="questionConditionPath"]').value = condition.path || '';
+                lastCondition.querySelector('select[name="questionConditionOp"]').value = condition.op || 'equals';
+                lastCondition.querySelector('input[name="questionConditionValue"]').value = condition.value || '';
+            });
+        } else if (question.visibleWhen.anyOf) {
+            // Multiple conditions (anyOf)
+            document.getElementById('questionVisibilityType').value = 'anyOf';
+            updateQuestionVisibilityType();
+            
+            // Clear existing conditions
+            document.getElementById('questionAnyOfConditionsList').innerHTML = '';
+            
+            // Add each condition
+            question.visibleWhen.anyOf.forEach(condition => {
+                addQuestionAnyOfCondition();
+                const lastCondition = document.getElementById('questionAnyOfConditionsList').lastElementChild;
+                lastCondition.querySelector('input[name="questionAnyOfConditionPath"]').value = condition.path || '';
+                lastCondition.querySelector('select[name="questionAnyOfConditionOp"]').value = condition.op || 'equals';
+                lastCondition.querySelector('input[name="questionAnyOfConditionValue"]').value = condition.value || '';
+            });
+        } else {
+            // Simple condition
+            document.getElementById('questionVisibilityType').value = 'simple';
+            updateQuestionVisibilityType();
+            document.getElementById('questionVisibilityPath').value = question.visibleWhen.path || '';
+            document.getElementById('questionVisibilityOp').value = question.visibleWhen.op || 'equals';
+            document.getElementById('questionVisibilityValue').value = question.visibleWhen.value || '';
+        }
     } else {
         document.getElementById('questionVisibilityControls').classList.add('hidden');
     }
@@ -742,14 +900,59 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
     // Handle visibility conditions
     const hasVisibility = document.getElementById('sectionHasVisibility').checked;
     if (hasVisibility) {
-        const path = document.getElementById('sectionVisibilityPath').value;
-        const op = document.getElementById('sectionVisibilityOp').value;
-        const value = document.getElementById('sectionVisibilityValue').value;
+        const visibilityType = document.getElementById('sectionVisibilityType').value;
         
-        if (path && op && value) {
-            section.visibleWhen = { path, op, value };
+        if (visibilityType === 'allOf') {
+            // Multiple conditions (AND)
+            const conditions = [];
+            const conditionElements = document.querySelectorAll('#sectionConditionsList > div');
+            
+            conditionElements.forEach(element => {
+                const path = element.querySelector('input[name="sectionConditionPath"]').value;
+                const op = element.querySelector('select[name="sectionConditionOp"]').value;
+                const value = element.querySelector('input[name="sectionConditionValue"]').value;
+                
+                if (path && op && value) {
+                    conditions.push({ path, op, value });
+                }
+            });
+            
+            if (conditions.length > 0) {
+                section.visibleWhen = { allOf: conditions };
+            } else {
+                delete section.visibleWhen;
+            }
+        } else if (visibilityType === 'anyOf') {
+            // Multiple conditions (OR)
+            const conditions = [];
+            const conditionElements = document.querySelectorAll('#sectionAnyOfConditionsList > div');
+            
+            conditionElements.forEach(element => {
+                const path = element.querySelector('input[name="sectionAnyOfConditionPath"]').value;
+                const op = element.querySelector('select[name="sectionAnyOfConditionOp"]').value;
+                const value = element.querySelector('input[name="sectionAnyOfConditionValue"]').value;
+                
+                if (path && op && value) {
+                    conditions.push({ path, op, value });
+                }
+            });
+            
+            if (conditions.length > 0) {
+                section.visibleWhen = { anyOf: conditions };
+            } else {
+                delete section.visibleWhen;
+            }
         } else {
-            delete section.visibleWhen;
+            // Simple condition
+            const path = document.getElementById('sectionVisibilityPath').value;
+            const op = document.getElementById('sectionVisibilityOp').value;
+            const value = document.getElementById('sectionVisibilityValue').value;
+            
+            if (path && op && value) {
+                section.visibleWhen = { path, op, value };
+            } else {
+                delete section.visibleWhen;
+            }
         }
     } else {
         delete section.visibleWhen;
@@ -790,14 +993,59 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     // Handle visibility conditions
     const hasVisibility = document.getElementById('questionHasVisibility').checked;
     if (hasVisibility) {
-        const path = document.getElementById('questionVisibilityPath').value;
-        const op = document.getElementById('questionVisibilityOp').value;
-        const value = document.getElementById('questionVisibilityValue').value;
+        const visibilityType = document.getElementById('questionVisibilityType').value;
         
-        if (path && op && value) {
-            question.visibleWhen = { path, op, value };
+        if (visibilityType === 'allOf') {
+            // Multiple conditions (AND)
+            const conditions = [];
+            const conditionElements = document.querySelectorAll('#questionConditionsList > div');
+            
+            conditionElements.forEach(element => {
+                const path = element.querySelector('input[name="questionConditionPath"]').value;
+                const op = element.querySelector('select[name="questionConditionOp"]').value;
+                const value = element.querySelector('input[name="questionConditionValue"]').value;
+                
+                if (path && op && value) {
+                    conditions.push({ path, op, value });
+                }
+            });
+            
+            if (conditions.length > 0) {
+                question.visibleWhen = { allOf: conditions };
+            } else {
+                delete question.visibleWhen;
+            }
+        } else if (visibilityType === 'anyOf') {
+            // Multiple conditions (OR)
+            const conditions = [];
+            const conditionElements = document.querySelectorAll('#questionAnyOfConditionsList > div');
+            
+            conditionElements.forEach(element => {
+                const path = element.querySelector('input[name="questionAnyOfConditionPath"]').value;
+                const op = element.querySelector('select[name="questionAnyOfConditionOp"]').value;
+                const value = element.querySelector('input[name="questionAnyOfConditionValue"]').value;
+                
+                if (path && op && value) {
+                    conditions.push({ path, op, value });
+                }
+            });
+            
+            if (conditions.length > 0) {
+                question.visibleWhen = { anyOf: conditions };
+            } else {
+                delete question.visibleWhen;
+            }
         } else {
-            delete question.visibleWhen;
+            // Simple condition
+            const path = document.getElementById('questionVisibilityPath').value;
+            const op = document.getElementById('questionVisibilityOp').value;
+            const value = document.getElementById('questionVisibilityValue').value;
+            
+            if (path && op && value) {
+                question.visibleWhen = { path, op, value };
+            } else {
+                delete question.visibleWhen;
+            }
         }
     } else {
         delete question.visibleWhen;
@@ -823,6 +1071,7 @@ function toggleSectionVisibility() {
         document.getElementById('sectionVisibilityPath').value = '';
         document.getElementById('sectionVisibilityOp').value = 'equals';
         document.getElementById('sectionVisibilityValue').value = '';
+        document.getElementById('sectionConditionsList').innerHTML = '';
     }
 }
 
@@ -838,7 +1087,256 @@ function toggleQuestionVisibility() {
         document.getElementById('questionVisibilityPath').value = '';
         document.getElementById('questionVisibilityOp').value = 'equals';
         document.getElementById('questionVisibilityValue').value = '';
+        document.getElementById('questionConditionsList').innerHTML = '';
     }
+}
+
+function updateSectionVisibilityType() {
+    const type = document.getElementById('sectionVisibilityType').value;
+    const simpleDiv = document.getElementById('sectionSimpleCondition');
+    const allOfDiv = document.getElementById('sectionAllOfConditions');
+    const anyOfDiv = document.getElementById('sectionAnyOfConditions');
+    
+    // Hide all first
+    simpleDiv.classList.add('hidden');
+    allOfDiv.classList.add('hidden');
+    anyOfDiv.classList.add('hidden');
+    
+    if (type === 'simple') {
+        simpleDiv.classList.remove('hidden');
+    } else if (type === 'allOf') {
+        allOfDiv.classList.remove('hidden');
+        if (document.getElementById('sectionConditionsList').children.length === 0) {
+            addSectionCondition();
+        }
+    } else if (type === 'anyOf') {
+        anyOfDiv.classList.remove('hidden');
+        if (document.getElementById('sectionAnyOfConditionsList').children.length === 0) {
+            addSectionAnyOfCondition();
+        }
+    }
+}
+
+function updateQuestionVisibilityType() {
+    const type = document.getElementById('questionVisibilityType').value;
+    const simpleDiv = document.getElementById('questionSimpleCondition');
+    const allOfDiv = document.getElementById('questionAllOfConditions');
+    const anyOfDiv = document.getElementById('questionAnyOfConditions');
+    
+    // Hide all first
+    simpleDiv.classList.add('hidden');
+    allOfDiv.classList.add('hidden');
+    anyOfDiv.classList.add('hidden');
+    
+    if (type === 'simple') {
+        simpleDiv.classList.remove('hidden');
+    } else if (type === 'allOf') {
+        allOfDiv.classList.remove('hidden');
+        if (document.getElementById('questionConditionsList').children.length === 0) {
+            addQuestionCondition();
+        }
+    } else if (type === 'anyOf') {
+        anyOfDiv.classList.remove('hidden');
+        if (document.getElementById('questionAnyOfConditionsList').children.length === 0) {
+            addQuestionAnyOfCondition();
+        }
+    }
+}
+
+function addSectionCondition() {
+    const container = document.getElementById('sectionConditionsList');
+    const conditionIndex = container.children.length;
+    
+    const conditionDiv = document.createElement('div');
+    conditionDiv.className = 'border border-gray-200 rounded p-3 bg-gray-50';
+    conditionDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-medium text-gray-600">Condition ${conditionIndex + 1}</span>
+            <button type="button" onclick="removeSectionCondition(this)" 
+                    class="text-red-500 hover:text-red-600 text-xs">
+                🗑️ Remove
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                <input type="text" name="sectionConditionPath" placeholder="e.g., 2.2"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                <select name="sectionConditionOp"
+                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="equals">equals</option>
+                    <option value="not_equals">not equals</option>
+                    <option value="contains">contains</option>
+                    <option value="not_contains">not contains</option>
+                    <option value="greater_than">greater than</option>
+                    <option value="less_than">less than</option>
+                    <option value="greaterThanOrEqual">greater than or equal</option>
+                    <option value="lessThanOrEqual">less than or equal</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                <input type="text" name="sectionConditionValue" placeholder="e.g., employed"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(conditionDiv);
+}
+
+function addQuestionCondition() {
+    const container = document.getElementById('questionConditionsList');
+    const conditionIndex = container.children.length;
+    
+    const conditionDiv = document.createElement('div');
+    conditionDiv.className = 'border border-gray-200 rounded p-3 bg-gray-50';
+    conditionDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-medium text-gray-600">Condition ${conditionIndex + 1}</span>
+            <button type="button" onclick="removeQuestionCondition(this)" 
+                    class="text-red-500 hover:text-red-600 text-xs">
+                🗑️ Remove
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                <input type="text" name="questionConditionPath" placeholder="e.g., 2.2"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                <select name="questionConditionOp"
+                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="equals">equals</option>
+                    <option value="not_equals">not equals</option>
+                    <option value="contains">contains</option>
+                    <option value="not_contains">not contains</option>
+                    <option value="greater_than">greater than</option>
+                    <option value="less_than">less than</option>
+                    <option value="greaterThanOrEqual">greater than or equal</option>
+                    <option value="lessThanOrEqual">less than or equal</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                <input type="text" name="questionConditionValue" placeholder="e.g., employed"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(conditionDiv);
+}
+
+function removeSectionCondition(button) {
+    button.parentElement.parentElement.remove();
+}
+
+function removeQuestionCondition(button) {
+    button.parentElement.parentElement.remove();
+}
+
+function addSectionAnyOfCondition() {
+    const container = document.getElementById('sectionAnyOfConditionsList');
+    const conditionIndex = container.children.length;
+    
+    const conditionDiv = document.createElement('div');
+    conditionDiv.className = 'border border-gray-200 rounded p-3 bg-gray-50';
+    conditionDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-medium text-gray-600">Condition ${conditionIndex + 1}</span>
+            <button type="button" onclick="removeSectionAnyOfCondition(this)" 
+                    class="text-red-500 hover:text-red-600 text-xs">
+                🗑️ Remove
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                <input type="text" name="sectionAnyOfConditionPath" placeholder="e.g., 2.2"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                <select name="sectionAnyOfConditionOp"
+                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="equals">equals</option>
+                    <option value="not_equals">not equals</option>
+                    <option value="contains">contains</option>
+                    <option value="not_contains">not contains</option>
+                    <option value="greater_than">greater than</option>
+                    <option value="less_than">less than</option>
+                    <option value="greaterThanOrEqual">greater than or equal</option>
+                    <option value="lessThanOrEqual">less than or equal</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                <input type="text" name="sectionAnyOfConditionValue" placeholder="e.g., employed"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(conditionDiv);
+}
+
+function addQuestionAnyOfCondition() {
+    const container = document.getElementById('questionAnyOfConditionsList');
+    const conditionIndex = container.children.length;
+    
+    const conditionDiv = document.createElement('div');
+    conditionDiv.className = 'border border-gray-200 rounded p-3 bg-gray-50';
+    conditionDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-medium text-gray-600">Condition ${conditionIndex + 1}</span>
+            <button type="button" onclick="removeQuestionAnyOfCondition(this)" 
+                    class="text-red-500 hover:text-red-600 text-xs">
+                🗑️ Remove
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Path</label>
+                <input type="text" name="questionAnyOfConditionPath" placeholder="e.g., 2.2"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Operator</label>
+                <select name="questionAnyOfConditionOp"
+                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="equals">equals</option>
+                    <option value="not_equals">not equals</option>
+                    <option value="contains">contains</option>
+                    <option value="not_contains">not contains</option>
+                    <option value="greater_than">greater than</option>
+                    <option value="less_than">less than</option>
+                    <option value="greaterThanOrEqual">greater than or equal</option>
+                    <option value="lessThanOrEqual">less than or equal</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                <input type="text" name="questionAnyOfConditionValue" placeholder="e.g., employed"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(conditionDiv);
+}
+
+function removeSectionAnyOfCondition(button) {
+    button.parentElement.parentElement.remove();
+}
+
+function removeQuestionAnyOfCondition(button) {
+    button.parentElement.parentElement.remove();
 }
 
 // Add CSRF token
