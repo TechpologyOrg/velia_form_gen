@@ -221,6 +221,7 @@
                         <option value="date">Date</option>
                         <option value="display">Display</option>
                         <option value="title">Title</option>
+                        <option value="paragraph">Paragraph</option>
                         <option value="toggleList">Toggle List</option>
                     </select>
                 </div>
@@ -775,6 +776,17 @@ function updateQuestionSpecificFields(type) {
                 <textarea id="questionChoices" name="choices" rows="4"
                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                          placeholder="JavaScript&#10;Python&#10;React&#10;Node.js"></textarea>
+            </div>
+        `;
+    }
+    
+    if (type === 'paragraph') {
+        html = `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Paragraph Content</label>
+                <textarea id="questionValue" name="value" rows="6"
+                         class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         placeholder="Enter your paragraph content here...&#10;&#10;You can use line breaks to format your text.&#10;Perfect for instructions, descriptions, or any multi-line content."></textarea>
             </div>
         `;
     }
