@@ -222,6 +222,7 @@
                         <option value="display">Display</option>
                         <option value="title">Title</option>
                         <option value="paragraph">Paragraph</option>
+                        <option value="markdown">Markdown</option>
                         <option value="toggleList">Toggle List</option>
                     </select>
                 </div>
@@ -688,7 +689,16 @@ function editQuestion(sectionIndex, questionIndex) {
         document.getElementById('questionPlaceholder').value = question.placeholder;
     }
     if (question.value !== undefined) {
-        document.getElementById('questionValue').value = question.value;
+        const valueField = document.getElementById('questionValue');
+        if (valueField) {
+            if (valueField.codemirror) {
+                // Set value in CodeMirror editor
+                valueField.codemirror.setValue(question.value);
+            } else {
+                // Set value in regular textarea/input
+                valueField.value = question.value;
+            }
+        }
     }
     if (question.key) {
         document.getElementById('questionKey').value = question.key;
@@ -791,6 +801,18 @@ function updateQuestionSpecificFields(type) {
         `;
     }
     
+    if (type === 'markdown') {
+        html = `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Markdown Content</label>
+                <textarea id="questionValue" name="value" rows="8"
+                         class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                         placeholder="## Instructions&#10;&#10;Please complete the following steps:&#10;&#10;1. **Fill in your personal information**&#10;2. *Verify your contact details*&#10;3. Submit the form&#10;&#10;&gt; **Note**: All fields marked with * are required.&#10;&#10;For more information, visit [our website](https://example.com)."></textarea>
+                <p class="text-xs text-gray-500 mt-1">Supports Markdown syntax with live highlighting</p>
+            </div>
+        `;
+    }
+    
     if (type === 'text' || type === 'numeric') {
         html += `
             <div class="mb-4">
@@ -821,6 +843,27 @@ function updateQuestionSpecificFields(type) {
     `;
     
     container.innerHTML = html;
+    
+    // Initialize CodeMirror for markdown type
+    if (type === 'markdown') {
+        const textarea = document.getElementById('questionValue');
+        if (textarea && typeof CodeMirror !== 'undefined') {
+            const editor = CodeMirror.fromTextArea(textarea, {
+                mode: 'markdown',
+                lineNumbers: true,
+                lineWrapping: true,
+                theme: 'default',
+                indentUnit: 2,
+                tabSize: 2,
+                extraKeys: {
+                    "Ctrl-Space": "autocomplete"
+                }
+            });
+            
+            // Store editor reference for later use
+            textarea.codemirror = editor;
+        }
+    }
 }
 
 function hideQuestionModal() {
@@ -993,7 +1036,15 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     
     question.title = formData.get('title');
     question.type = formData.get('type');
-    question.value = formData.get('value');
+    
+    // Handle value field - check if it's CodeMirror editor for markdown
+    const valueField = document.getElementById('questionValue');
+    if (valueField && valueField.codemirror) {
+        question.value = valueField.codemirror.getValue();
+    } else {
+        question.value = formData.get('value');
+    }
+    
     question.placeholder = formData.get('placeholder');
     
     // Handle choices array for choice and toggleList types
