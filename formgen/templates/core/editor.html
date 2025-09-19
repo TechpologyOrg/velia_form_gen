@@ -862,6 +862,9 @@ function updateQuestionSpecificFields(type) {
             
             // Store editor reference for later use
             textarea.codemirror = editor;
+            console.log('CodeMirror editor initialized for markdown:', editor);
+        } else {
+            console.log('CodeMirror initialization failed:', { textarea: !!textarea, CodeMirror: typeof CodeMirror });
         }
     }
 }
@@ -1039,8 +1042,12 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     
     // Handle value field - check if it's CodeMirror editor for markdown
     const valueField = document.getElementById('questionValue');
-    if (valueField && valueField.codemirror) {
-        question.value = valueField.codemirror.getValue() || '';
+    if (question.type === 'markdown' && valueField && valueField.codemirror) {
+        // For markdown type, get value from CodeMirror editor
+        const editor = valueField.codemirror;
+        editor.save(); // Ensure content is saved to textarea
+        question.value = editor.getValue() || '';
+        console.log('Markdown value saved:', question.value);
     } else {
         question.value = formData.get('value') || '';
     }
