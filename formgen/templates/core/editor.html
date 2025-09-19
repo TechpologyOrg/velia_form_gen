@@ -952,8 +952,8 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
     const formData = new FormData(this);
     
     const section = currentSchema.answers[index];
-    section.title = formData.get('title');
-    section.description = formData.get('description');
+    section.title = formData.get('title') || '';
+    section.description = formData.get('description') || '';
     
     // Handle visibility conditions
     const hasVisibility = document.getElementById('sectionHasVisibility').checked;
@@ -1034,18 +1034,18 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     
     const question = currentSchema.answers[sectionIndex].questions[questionIndex];
     
-    question.title = formData.get('title');
-    question.type = formData.get('type');
+    question.title = formData.get('title') || '';
+    question.type = formData.get('type') || 'text';
     
     // Handle value field - check if it's CodeMirror editor for markdown
     const valueField = document.getElementById('questionValue');
     if (valueField && valueField.codemirror) {
-        question.value = valueField.codemirror.getValue();
+        question.value = valueField.codemirror.getValue() || '';
     } else {
-        question.value = formData.get('value');
+        question.value = formData.get('value') || '';
     }
     
-    question.placeholder = formData.get('placeholder');
+    question.placeholder = formData.get('placeholder') || '';
     
     // Handle choices array for choice and toggleList types
     if (question.type === 'choice' || question.type === 'toggleList') {
