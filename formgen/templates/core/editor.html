@@ -153,6 +153,20 @@
                                         <option value="lessThanOrEqual">less than or equal</option>
                                         <option value="isEmpty">is empty</option>
                                         <option value="isNotEmpty">is not empty</option>
+                                        <optgroup label="Date Operators">
+                                            <option value="before">before</option>
+                                            <option value="after">after</option>
+                                            <option value="on">on</option>
+                                            <option value="isPast">is past</option>
+                                            <option value="isFuture">is future</option>
+                                            <option value="isToday">is today</option>
+                                            <option value="daysAgo">days ago</option>
+                                            <option value="daysFromNow">days from now</option>
+                                            <option value="monthsAgo">months ago</option>
+                                            <option value="monthsFromNow">months from now</option>
+                                            <option value="yearsAgo">years ago</option>
+                                            <option value="yearsFromNow">years from now</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div>
@@ -276,6 +290,20 @@
                                         <option value="lessThanOrEqual">less than or equal</option>
                                         <option value="isEmpty">is empty</option>
                                         <option value="isNotEmpty">is not empty</option>
+                                        <optgroup label="Date Operators">
+                                            <option value="before">before</option>
+                                            <option value="after">after</option>
+                                            <option value="on">on</option>
+                                            <option value="isPast">is past</option>
+                                            <option value="isFuture">is future</option>
+                                            <option value="isToday">is today</option>
+                                            <option value="daysAgo">days ago</option>
+                                            <option value="daysFromNow">days from now</option>
+                                            <option value="monthsAgo">months ago</option>
+                                            <option value="monthsFromNow">months from now</option>
+                                            <option value="yearsAgo">years ago</option>
+                                            <option value="yearsFromNow">years from now</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div>
@@ -707,6 +735,12 @@ function editQuestion(sectionIndex, questionIndex) {
     if (question.key) {
         document.getElementById('questionKey').value = question.key;
     }
+    if (question.regex) {
+        const regexField = document.getElementById('questionRegex');
+        if (regexField) {
+            regexField.value = question.regex;
+        }
+    }
     
     // Handle visibility controls
     const hasVisibility = question.visibleWhen && Object.keys(question.visibleWhen).length > 0;
@@ -823,6 +857,13 @@ function updateQuestionSpecificFields(type) {
                 <label class="block text-sm font-medium text-gray-700 mb-2">Placeholder</label>
                 <input type="text" id="questionPlaceholder" name="placeholder"
                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Validation Regex</label>
+                <input type="text" id="questionRegex" name="regex"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                       placeholder="e.g., ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$">
+                <p class="text-xs text-gray-500 mt-1">Optional: Regular expression pattern for input validation</p>
             </div>
         `;
     }
@@ -1074,6 +1115,19 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         delete question.key;
     }
     
+    // Handle regex field for text and numeric types
+    if (question.type === 'text' || question.type === 'numeric') {
+        const regexValue = formData.get('regex');
+        if (regexValue && regexValue.trim()) {
+            question.regex = regexValue.trim();
+        } else {
+            delete question.regex;
+        }
+    } else {
+        // Remove regex for other types
+        delete question.regex;
+    }
+    
     // Handle visibility conditions
     const hasVisibility = document.getElementById('questionHasVisibility').checked;
     if (hasVisibility) {
@@ -1261,6 +1315,20 @@ function addSectionCondition() {
                     <option value="lessThanOrEqual">less than or equal</option>
                     <option value="isEmpty">is empty</option>
                     <option value="isNotEmpty">is not empty</option>
+                    <optgroup label="Date Operators">
+                        <option value="before">before</option>
+                        <option value="after">after</option>
+                        <option value="on">on</option>
+                        <option value="isPast">is past</option>
+                        <option value="isFuture">is future</option>
+                        <option value="isToday">is today</option>
+                        <option value="daysAgo">days ago</option>
+                        <option value="daysFromNow">days from now</option>
+                        <option value="monthsAgo">months ago</option>
+                        <option value="monthsFromNow">months from now</option>
+                        <option value="yearsAgo">years ago</option>
+                        <option value="yearsFromNow">years from now</option>
+                    </optgroup>
                 </select>
             </div>
             <div>
@@ -1272,6 +1340,13 @@ function addSectionCondition() {
     `;
     
     container.appendChild(conditionDiv);
+    
+    // Add event listener to the new operator dropdown
+    const newOpSelect = conditionDiv.querySelector('select[name="sectionConditionOp"]');
+    const newValueInput = conditionDiv.querySelector('input[name="sectionConditionValue"]');
+    if (newOpSelect && newValueInput) {
+        newOpSelect.addEventListener('change', () => updateValueFieldVisibility(newOpSelect, newValueInput));
+    }
 }
 
 function addQuestionCondition() {
@@ -1308,6 +1383,20 @@ function addQuestionCondition() {
                     <option value="lessThanOrEqual">less than or equal</option>
                     <option value="isEmpty">is empty</option>
                     <option value="isNotEmpty">is not empty</option>
+                    <optgroup label="Date Operators">
+                        <option value="before">before</option>
+                        <option value="after">after</option>
+                        <option value="on">on</option>
+                        <option value="isPast">is past</option>
+                        <option value="isFuture">is future</option>
+                        <option value="isToday">is today</option>
+                        <option value="daysAgo">days ago</option>
+                        <option value="daysFromNow">days from now</option>
+                        <option value="monthsAgo">months ago</option>
+                        <option value="monthsFromNow">months from now</option>
+                        <option value="yearsAgo">years ago</option>
+                        <option value="yearsFromNow">years from now</option>
+                    </optgroup>
                 </select>
             </div>
             <div>
@@ -1319,6 +1408,13 @@ function addQuestionCondition() {
     `;
     
     container.appendChild(conditionDiv);
+    
+    // Add event listener to the new operator dropdown
+    const newOpSelect = conditionDiv.querySelector('select[name="questionConditionOp"]');
+    const newValueInput = conditionDiv.querySelector('input[name="questionConditionValue"]');
+    if (newOpSelect && newValueInput) {
+        newOpSelect.addEventListener('change', () => updateValueFieldVisibility(newOpSelect, newValueInput));
+    }
 }
 
 function removeSectionCondition(button) {
@@ -1363,6 +1459,20 @@ function addSectionAnyOfCondition() {
                     <option value="lessThanOrEqual">less than or equal</option>
                     <option value="isEmpty">is empty</option>
                     <option value="isNotEmpty">is not empty</option>
+                    <optgroup label="Date Operators">
+                        <option value="before">before</option>
+                        <option value="after">after</option>
+                        <option value="on">on</option>
+                        <option value="isPast">is past</option>
+                        <option value="isFuture">is future</option>
+                        <option value="isToday">is today</option>
+                        <option value="daysAgo">days ago</option>
+                        <option value="daysFromNow">days from now</option>
+                        <option value="monthsAgo">months ago</option>
+                        <option value="monthsFromNow">months from now</option>
+                        <option value="yearsAgo">years ago</option>
+                        <option value="yearsFromNow">years from now</option>
+                    </optgroup>
                 </select>
             </div>
             <div>
@@ -1374,6 +1484,13 @@ function addSectionAnyOfCondition() {
     `;
     
     container.appendChild(conditionDiv);
+    
+    // Add event listener to the new operator dropdown
+    const newOpSelect = conditionDiv.querySelector('select[name="sectionAnyOfConditionOp"]');
+    const newValueInput = conditionDiv.querySelector('input[name="sectionAnyOfConditionValue"]');
+    if (newOpSelect && newValueInput) {
+        newOpSelect.addEventListener('change', () => updateValueFieldVisibility(newOpSelect, newValueInput));
+    }
 }
 
 function addQuestionAnyOfCondition() {
@@ -1410,6 +1527,20 @@ function addQuestionAnyOfCondition() {
                     <option value="lessThanOrEqual">less than or equal</option>
                     <option value="isEmpty">is empty</option>
                     <option value="isNotEmpty">is not empty</option>
+                    <optgroup label="Date Operators">
+                        <option value="before">before</option>
+                        <option value="after">after</option>
+                        <option value="on">on</option>
+                        <option value="isPast">is past</option>
+                        <option value="isFuture">is future</option>
+                        <option value="isToday">is today</option>
+                        <option value="daysAgo">days ago</option>
+                        <option value="daysFromNow">days from now</option>
+                        <option value="monthsAgo">months ago</option>
+                        <option value="monthsFromNow">months from now</option>
+                        <option value="yearsAgo">years ago</option>
+                        <option value="yearsFromNow">years from now</option>
+                    </optgroup>
                 </select>
             </div>
             <div>
@@ -1421,6 +1552,13 @@ function addQuestionAnyOfCondition() {
     `;
     
     container.appendChild(conditionDiv);
+    
+    // Add event listener to the new operator dropdown
+    const newOpSelect = conditionDiv.querySelector('select[name="questionAnyOfConditionOp"]');
+    const newValueInput = conditionDiv.querySelector('input[name="questionAnyOfConditionValue"]');
+    if (newOpSelect && newValueInput) {
+        newOpSelect.addEventListener('change', () => updateValueFieldVisibility(newOpSelect, newValueInput));
+    }
 }
 
 function removeSectionAnyOfCondition(button) {
@@ -1429,6 +1567,48 @@ function removeSectionAnyOfCondition(button) {
 
 function removeQuestionAnyOfCondition(button) {
     button.parentElement.parentElement.remove();
+}
+
+// Date operator handling functions
+function updateValueFieldVisibility(operatorSelect, valueInput) {
+    const operator = operatorSelect.value;
+    const valueField = valueInput.parentElement;
+    
+    // Operators that don't need a value
+    const noValueOperators = ['isPast', 'isFuture', 'isToday', 'isEmpty', 'isNotEmpty'];
+    
+    if (noValueOperators.includes(operator)) {
+        valueField.style.display = 'none';
+        valueInput.value = ''; // Clear the value
+    } else {
+        valueField.style.display = 'block';
+        
+        // Update placeholder based on operator type
+        if (['daysAgo', 'daysFromNow', 'monthsAgo', 'monthsFromNow', 'yearsAgo', 'yearsFromNow'].includes(operator)) {
+            valueInput.placeholder = 'e.g., 7';
+        } else if (['before', 'after', 'on'].includes(operator)) {
+            valueInput.placeholder = 'e.g., 2024-01-15';
+        } else {
+            valueInput.placeholder = 'e.g., employed';
+        }
+    }
+}
+
+// Add event listeners to all operator dropdowns
+function addOperatorEventListeners() {
+    // Main section visibility operator
+    const sectionOp = document.getElementById('sectionVisibilityOp');
+    const sectionValue = document.getElementById('sectionVisibilityValue');
+    if (sectionOp && sectionValue) {
+        sectionOp.addEventListener('change', () => updateValueFieldVisibility(sectionOp, sectionValue));
+    }
+    
+    // Main question visibility operator
+    const questionOp = document.getElementById('questionVisibilityOp');
+    const questionValue = document.getElementById('questionVisibilityValue');
+    if (questionOp && questionValue) {
+        questionOp.addEventListener('change', () => updateValueFieldVisibility(questionOp, questionValue));
+    }
 }
 
 // Add CSRF token
@@ -1441,6 +1621,9 @@ document.addEventListener('DOMContentLoaded', function() {
         token.value = '{{ csrf_token }}';
         document.body.appendChild(token);
     }
+    
+    // Add operator event listeners
+    addOperatorEventListeners();
 });
 </script>
 {% endblock %}
