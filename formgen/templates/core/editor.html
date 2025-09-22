@@ -1016,10 +1016,18 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
             conditionElements.forEach(element => {
                 const path = element.querySelector('input[name="sectionConditionPath"]').value;
                 const op = element.querySelector('select[name="sectionConditionOp"]').value;
-                const value = element.querySelector('input[name="sectionConditionValue"]').value;
+                const valueInput = element.querySelector('input[name="sectionConditionValue"]');
+                const value = valueInput ? valueInput.value : '';
                 
-                if (path && op && value) {
-                    conditions.push({ path, op, value });
+                // Operators that don't need a value
+                const noValueOperators = ['isPast', 'isFuture', 'isToday', 'isEmpty', 'isNotEmpty'];
+                
+                if (path && op) {
+                    if (noValueOperators.includes(op)) {
+                        conditions.push({ path, op, value: '' });
+                    } else if (value) {
+                        conditions.push({ path, op, value });
+                    }
                 }
             });
             
@@ -1036,10 +1044,18 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
             conditionElements.forEach(element => {
                 const path = element.querySelector('input[name="sectionAnyOfConditionPath"]').value;
                 const op = element.querySelector('select[name="sectionAnyOfConditionOp"]').value;
-                const value = element.querySelector('input[name="sectionAnyOfConditionValue"]').value;
+                const valueInput = element.querySelector('input[name="sectionAnyOfConditionValue"]');
+                const value = valueInput ? valueInput.value : '';
                 
-                if (path && op && value) {
-                    conditions.push({ path, op, value });
+                // Operators that don't need a value
+                const noValueOperators = ['isPast', 'isFuture', 'isToday', 'isEmpty', 'isNotEmpty'];
+                
+                if (path && op) {
+                    if (noValueOperators.includes(op)) {
+                        conditions.push({ path, op, value: '' });
+                    } else if (value) {
+                        conditions.push({ path, op, value });
+                    }
                 }
             });
             
@@ -1052,10 +1068,20 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
             // Simple condition
             const path = document.getElementById('sectionVisibilityPath').value;
             const op = document.getElementById('sectionVisibilityOp').value;
-            const value = document.getElementById('sectionVisibilityValue').value;
+            const valueInput = document.getElementById('sectionVisibilityValue');
+            const value = valueInput ? valueInput.value : '';
             
-            if (path && op && value) {
-                section.visibleWhen = { path, op, value };
+            // Operators that don't need a value
+            const noValueOperators = ['isPast', 'isFuture', 'isToday', 'isEmpty', 'isNotEmpty'];
+            
+            if (path && op) {
+                if (noValueOperators.includes(op)) {
+                    section.visibleWhen = { path, op, value: '' };
+                } else if (value) {
+                    section.visibleWhen = { path, op, value };
+                } else {
+                    delete section.visibleWhen;
+                }
             } else {
                 delete section.visibleWhen;
             }
@@ -1141,10 +1167,18 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
             conditionElements.forEach(element => {
                 const path = element.querySelector('input[name="questionConditionPath"]').value;
                 const op = element.querySelector('select[name="questionConditionOp"]').value;
-                const value = element.querySelector('input[name="questionConditionValue"]').value;
+                const valueInput = element.querySelector('input[name="questionConditionValue"]');
+                const value = valueInput ? valueInput.value : '';
                 
-                if (path && op && value) {
-                    conditions.push({ path, op, value });
+                // Operators that don't need a value
+                const noValueOperators = ['isPast', 'isFuture', 'isToday', 'isEmpty', 'isNotEmpty'];
+                
+                if (path && op) {
+                    if (noValueOperators.includes(op)) {
+                        conditions.push({ path, op, value: '' });
+                    } else if (value) {
+                        conditions.push({ path, op, value });
+                    }
                 }
             });
             
@@ -1161,10 +1195,18 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
             conditionElements.forEach(element => {
                 const path = element.querySelector('input[name="questionAnyOfConditionPath"]').value;
                 const op = element.querySelector('select[name="questionAnyOfConditionOp"]').value;
-                const value = element.querySelector('input[name="questionAnyOfConditionValue"]').value;
+                const valueInput = element.querySelector('input[name="questionAnyOfConditionValue"]');
+                const value = valueInput ? valueInput.value : '';
                 
-                if (path && op && value) {
-                    conditions.push({ path, op, value });
+                // Operators that don't need a value
+                const noValueOperators = ['isPast', 'isFuture', 'isToday', 'isEmpty', 'isNotEmpty'];
+                
+                if (path && op) {
+                    if (noValueOperators.includes(op)) {
+                        conditions.push({ path, op, value: '' });
+                    } else if (value) {
+                        conditions.push({ path, op, value });
+                    }
                 }
             });
             
@@ -1177,10 +1219,20 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
             // Simple condition
             const path = document.getElementById('questionVisibilityPath').value;
             const op = document.getElementById('questionVisibilityOp').value;
-            const value = document.getElementById('questionVisibilityValue').value;
+            const valueInput = document.getElementById('questionVisibilityValue');
+            const value = valueInput ? valueInput.value : '';
             
-            if (path && op && value) {
-                question.visibleWhen = { path, op, value };
+            // Operators that don't need a value
+            const noValueOperators = ['isPast', 'isFuture', 'isToday', 'isEmpty', 'isNotEmpty'];
+            
+            if (path && op) {
+                if (noValueOperators.includes(op)) {
+                    question.visibleWhen = { path, op, value: '' };
+                } else if (value) {
+                    question.visibleWhen = { path, op, value };
+                } else {
+                    delete question.visibleWhen;
+                }
             } else {
                 delete question.visibleWhen;
             }
