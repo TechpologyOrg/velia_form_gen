@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Velia Form Generator{% endblock %}</title>
+        <title>{% block title %}Velia Form & Card Generator{% endblock %}</title>
 
         <!-- HTMX -->
         <script src="https://unpkg.com/htmx.org@2.0.3"></script>
@@ -68,6 +68,25 @@
         </style>
     </head>
     <body class="bg-gray-100">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-8">
+                        <a href="/" class="text-xl font-bold text-gray-900">Velia Generator</a>
+                        <div class="flex space-x-4">
+                            <a href="/" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                📝 Form Generator
+                            </a>
+                            <a href="/cardgen/" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                🎨 Card Generator
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
         {% block content %}{% endblock %}
     </body>
 </html>

@@ -1,0 +1,969 @@
+{% extends "base.html" %}
+{% block title %}Card Template Editor - {{ template.name }}{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ template.name }}</h1>
+                    <p class="text-gray-600 mt-1">Visual Card Template Editor</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="saveTemplate()" 
+                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                        Save Template
+                    </button>
+                    <button onclick="toggleJsonView()" 
+                            class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
+                        JSON View
+                    </button>
+                    <a href="{% url 'cardgen_templates' template.organisation.id %}" 
+                       class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                        Back to Templates
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="h-screen flex flex-col">
+        <!-- Visual Editor -->
+        <div id="visualEditor" class="flex-1 flex overflow-hidden">
+            <!-- Component Tree (Left Panel) -->
+            <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">Component Tree</h2>
+                    <button onclick="toggleComponentPalette()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4">
+                    <div id="componentTree">
+                        <!-- Tree will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resizable Handle -->
+            <div class="w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize" id="resizeHandle"></div>
+
+            <!-- Live Preview (Center Panel) -->
+            <div class="flex-1 bg-white flex flex-col">
+                <div class="p-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Live Preview</h2>
+                </div>
+                <div class="flex-1 overflow-auto p-4">
+                    <div id="livePreview" class="min-h-full border border-gray-200 rounded p-4 bg-gray-50">
+                        <!-- Live HTML preview will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resizable Handle -->
+            <div class="w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize" id="resizeHandle2"></div>
+
+            <!-- Properties Panel (Right Panel) -->
+            <div class="w-80 bg-white border-l border-gray-200 flex flex-col">
+                <div class="p-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Properties</h2>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4">
+                    <div id="propertiesPanel">
+                        <p class="text-gray-500 text-center">Select a component to edit properties</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Component Palette Popup -->
+        <div id="componentPalette" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] mx-4 flex flex-col">
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-xl font-semibold text-gray-900">Component Palette</h2>
+                    <button onclick="toggleComponentPalette()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- HTML Elements -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">HTML Elements</h3>
+                            <div class="space-y-2">
+                                <div class="component-item" data-tag="div" draggable="true">
+                                    <span class="text-blue-600">📦</span> Container (div)
+                                </div>
+                                <div class="component-item" data-tag="p" draggable="true">
+                                    <span class="text-green-600">📝</span> Text (p)
+                                </div>
+                                <div class="component-item" data-tag="h1" draggable="true">
+                                    <span class="text-purple-600">📰</span> Heading 1
+                                </div>
+                                <div class="component-item" data-tag="h2" draggable="true">
+                                    <span class="text-purple-600">📰</span> Heading 2
+                                </div>
+                                <div class="component-item" data-tag="h3" draggable="true">
+                                    <span class="text-purple-600">📰</span> Heading 3
+                                </div>
+                                <div class="component-item" data-tag="span" draggable="true">
+                                    <span class="text-gray-600">🏷️</span> Span
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Interactive Components -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Interactive Components</h3>
+                            <div class="space-y-2">
+                                <div class="component-item" data-tag="Itext" draggable="true">
+                                    <span class="text-orange-600">📝</span> Text Input
+                                </div>
+                                <div class="component-item" data-tag="IBool" draggable="true">
+                                    <span class="text-red-600">☑️</span> Checkbox
+                                </div>
+                                <div class="component-item" data-tag="IChoice" draggable="true">
+                                    <span class="text-indigo-600">📋</span> Dropdown
+                                </div>
+                                <div class="component-item" data-tag="IToggle" draggable="true">
+                                    <span class="text-pink-600">🔄</span> Toggle Group
+                                </div>
+                                <div class="component-item" data-tag="Imultiline" draggable="true">
+                                    <span class="text-teal-600">📄</span> Textarea
+                                </div>
+                                <div class="component-item" data-tag="Ibutton" draggable="true">
+                                    <span class="text-yellow-600">🔘</span> Button
+                                </div>
+                                <div class="component-item" data-tag="I_V_Button" draggable="true">
+                                    <span class="text-yellow-600">🔘</span> Advanced Button
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-200 bg-gray-50">
+                    <p class="text-sm text-gray-600 text-center">
+                        Drag components to the Component Tree to add them to your template
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Editor (Hidden by default) -->
+        <div id="jsonEditor" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- JSON Editor -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-900">Template JSON</h2>
+                            <div class="flex space-x-2">
+                                <button onclick="validateJson()" 
+                                        class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                                    Validate
+                                </button>
+                                <button onclick="formatJson()" 
+                                        class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">
+                                    Format
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <textarea id="templateJson" 
+                                  class="w-full h-96 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                  placeholder="Enter your card template JSON here...">{{ template.template_data|safe }}</textarea>
+                        
+                        <div class="mt-4">
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Global Variables</h3>
+                            <textarea id="globalVars" 
+                                      class="w-full h-32 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                      placeholder="Enter global variables JSON here...">{{ template.global_vars|safe }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview and Documentation -->
+                <div class="space-y-6">
+                    <!-- Preview -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div class="p-6">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-4">Preview</h2>
+                            <div id="preview" class="border border-gray-200 rounded p-4 min-h-64 bg-gray-50">
+                                <p class="text-gray-500 text-center">JSON preview will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Component Documentation -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div class="p-6">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-4">Component Reference</h2>
+                            <div class="space-y-4 text-sm">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">HTML Elements</h3>
+                                    <p class="text-gray-600">div, p, span, h1-h6, img, a, button</p>
+                                    <code class="block mt-1 p-2 bg-gray-100 rounded text-xs">
+                                        {"tag": "div", "class": "flex flex-col", "children": [...]}
+                                    </code>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Interactive Components</h3>
+                                    <p class="text-gray-600">Itext, IBool, IChoice, IToggle, Imultiline, Ibutton, I_V_Button</p>
+                                    <code class="block mt-1 p-2 bg-gray-100 rounded text-xs">
+                                        {"tag": "Itext", "type": "Editable", "title": "Label", "value": "", "var": "variable_name"}
+                                    </code>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Component Properties</h3>
+                                    <ul class="text-gray-600 space-y-1">
+                                        <li><strong>tag:</strong> Component type</li>
+                                        <li><strong>type:</strong> "Editable" or "display"</li>
+                                        <li><strong>title:</strong> Component label</li>
+                                        <li><strong>value:</strong> Component value</li>
+                                        <li><strong>var:</strong> Variable name for resolution</li>
+                                        <li><strong>class:</strong> CSS classes</li>
+                                        <li><strong>children:</strong> Child components array</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let templateData = {{ template.template_data|safe }};
+let globalVars = {{ template.global_vars|safe }};
+let selectedComponent = null;
+let componentCounter = 0;
+
+// Component definitions with default properties
+const componentDefaults = {
+    'div': { tag: 'div', class: 'flex flex-col gap-2 p-4', children: [] },
+    'p': { tag: 'p', value: 'Text content', class: 'text-gray-700' },
+    'h1': { tag: 'h1', value: 'Heading 1', class: 'text-3xl font-bold' },
+    'h2': { tag: 'h2', value: 'Heading 2', class: 'text-2xl font-bold' },
+    'h3': { tag: 'h3', value: 'Heading 3', class: 'text-xl font-bold' },
+    'span': { tag: 'span', value: 'Span text', class: 'text-gray-600' },
+    'Itext': { tag: 'Itext', type: 'Editable', title: 'Text Input', value: '', class: 'w-full p-2 border rounded' },
+    'IBool': { tag: 'IBool', type: 'Editable', title: 'Checkbox', value: false, class: 'w-4 h-4' },
+    'IChoice': { tag: 'IChoice', type: 'Editable', title: 'Dropdown', value: '', choices: ['Option 1', 'Option 2'], class: 'w-full p-2 border rounded' },
+    'IToggle': { tag: 'IToggle', type: 'Editable', title: 'Toggle Group', value: '', options: ['Option 1', 'Option 2'], class: 'flex gap-2' },
+    'Imultiline': { tag: 'Imultiline', type: 'Editable', title: 'Textarea', value: '', class: 'w-full p-2 border rounded' },
+    'Ibutton': { tag: 'Ibutton', type: 'Editable', title: 'Button', value: 'Click me', class: 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600' },
+    'I_V_Button': { tag: 'I_V_Button', type: 'Editable', title: 'Advanced Button', value: 'Click me', variant: 'default', size: 'default', class: 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600' }
+};
+
+// Initialize the editor
+document.addEventListener('DOMContentLoaded', function() {
+    initializeVisualEditor();
+    setupDragAndDrop();
+    setupResizing();
+    renderComponentTree();
+    updateLivePreview();
+    
+    // Auto-update preview on JSON changes
+    document.getElementById('templateJson').addEventListener('input', function() {
+        updatePreview();
+    });
+    
+    document.getElementById('globalVars').addEventListener('input', function() {
+        updatePreview();
+    });
+});
+
+function initializeVisualEditor() {
+    // Ensure templateData is an array
+    if (!Array.isArray(templateData)) {
+        templateData = [];
+    }
+    
+    // Add unique IDs to all components
+    addComponentIds(templateData);
+}
+
+function addComponentIds(components) {
+    components.forEach((component, index) => {
+        if (!component.id) {
+            component.id = `comp_${componentCounter++}`;
+        }
+        if (component.children && Array.isArray(component.children)) {
+            addComponentIds(component.children);
+        }
+    });
+}
+
+function setupDragAndDrop() {
+    // Make component items draggable (both in popup and any future instances)
+    function setupDraggableItems() {
+        document.querySelectorAll('.component-item').forEach(item => {
+            if (!item.hasAttribute('data-drag-setup')) {
+                item.setAttribute('data-drag-setup', 'true');
+                item.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', this.dataset.tag);
+                });
+            }
+        });
+    }
+    
+    // Initial setup
+    setupDraggableItems();
+    
+    // Re-setup when popup is shown (in case items are recreated)
+    const palette = document.getElementById('componentPalette');
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                if (!palette.classList.contains('hidden')) {
+                    setupDraggableItems();
+                }
+            }
+        });
+    });
+    observer.observe(palette, { attributes: true });
+    
+    // Make component tree droppable
+    const componentTree = document.getElementById('componentTree');
+    componentTree.addEventListener('dragover', function(e) {
+        e.preventDefault();
+    });
+    
+    componentTree.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const tag = e.dataTransfer.getData('text/plain');
+        addComponentToRoot(tag);
+        // Close the palette after dropping
+        toggleComponentPalette();
+    });
+}
+
+function setupResizing() {
+    const leftPanel = document.querySelector('.w-80.border-r');
+    const rightPanel = document.querySelector('.w-80.border-l');
+    const centerPanel = document.querySelector('.flex-1.bg-white');
+    const resizeHandle = document.getElementById('resizeHandle');
+    const resizeHandle2 = document.getElementById('resizeHandle2');
+    
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+    
+    // Left resize handle
+    resizeHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = leftPanel.offsetWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+    
+    // Right resize handle
+    resizeHandle2.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = rightPanel.offsetWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+        
+        const deltaX = e.clientX - startX;
+        const newWidth = Math.max(200, Math.min(600, startWidth + deltaX));
+        
+        if (resizeHandle.matches(':hover') || document.body.style.cursor === 'col-resize') {
+            leftPanel.style.width = newWidth + 'px';
+        } else if (resizeHandle2.matches(':hover') || document.body.style.cursor === 'col-resize') {
+            rightPanel.style.width = newWidth + 'px';
+        }
+    });
+    
+    document.addEventListener('mouseup', function() {
+        isResizing = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    });
+}
+
+function toggleComponentPalette() {
+    const palette = document.getElementById('componentPalette');
+    palette.classList.toggle('hidden');
+    palette.classList.toggle('flex');
+}
+
+function addComponentToRoot(tag) {
+    const newComponent = JSON.parse(JSON.stringify(componentDefaults[tag]));
+    newComponent.id = `comp_${componentCounter++}`;
+    templateData.push(newComponent);
+    renderComponentTree();
+    updateLivePreview();
+}
+
+function addComponentToParent(parentId, tag) {
+    const newComponent = JSON.parse(JSON.stringify(componentDefaults[tag]));
+    newComponent.id = `comp_${componentCounter++}`;
+    
+    const parent = findComponentById(templateData, parentId);
+    if (parent) {
+        if (!parent.children) {
+            parent.children = [];
+        }
+        parent.children.push(newComponent);
+        renderComponentTree();
+        updateLivePreview();
+    }
+}
+
+function findComponentById(components, id) {
+    for (let component of components) {
+        if (component.id === id) {
+            return component;
+        }
+        if (component.children) {
+            const found = findComponentById(component.children, id);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+function renderComponentTree() {
+    const treeContainer = document.getElementById('componentTree');
+    
+    if (templateData.length === 0) {
+        treeContainer.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <p>No components yet</p>
+                <p class="text-sm">Click the ? icon to open the component palette</p>
+            </div>
+        `;
+        return;
+    }
+    
+    treeContainer.innerHTML = templateData.map(component => renderComponentNode(component)).join('');
+}
+
+function renderComponentNode(component, level = 0) {
+    const hasChildren = component.children && component.children.length > 0;
+    const isInteractive = component.tag.startsWith('I');
+    
+    let html = `
+        <div class="component-node border border-gray-200 rounded p-3 mb-2 ${selectedComponent === component.id ? 'bg-blue-50 border-blue-300' : 'bg-white hover:bg-gray-50'}" 
+             data-component-id="${component.id}" style="margin-left: ${level * 16}px;">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 flex-1 min-w-0">
+                    <span class="text-sm font-medium text-gray-900">${getComponentIcon(component.tag)} ${component.tag}</span>
+                    ${component.title ? `<span class="text-xs text-gray-500 truncate">"${component.title}"</span>` : ''}
+                </div>
+                <div class="flex items-center space-x-1 ml-2">
+                    <button onclick="selectComponent('${component.id}')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Edit</button>
+                    <button onclick="deleteComponent('${component.id}')" class="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">×</button>
+                </div>
+            </div>
+            ${component.value && !hasChildren ? `<div class="text-xs text-gray-400 mt-1 truncate">"${component.value}"</div>` : ''}
+    `;
+    
+    if (hasChildren) {
+        html += '<div class="mt-2 ml-2">';
+        html += component.children.map(child => renderComponentNode(child, level + 1)).join('');
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function getComponentIcon(tag) {
+    const icons = {
+        'div': '📦', 'p': '📝', 'h1': '📰', 'h2': '📰', 'h3': '📰', 'span': '🏷️',
+        'Itext': '📝', 'IBool': '☑️', 'IChoice': '📋', 'IToggle': '🔄', 
+        'Imultiline': '📄', 'Ibutton': '🔘', 'I_V_Button': '🔘'
+    };
+    return icons[tag] || '❓';
+}
+
+function selectComponent(id) {
+    selectedComponent = id;
+    renderComponentTree();
+    renderPropertiesPanel();
+}
+
+function deleteComponent(id) {
+    if (confirm('Are you sure you want to delete this component?')) {
+        // Remove component from templateData (including nested components)
+        templateData = removeComponentById(templateData, id);
+        
+        // Clear selection if the deleted component was selected
+        if (selectedComponent === id) {
+            selectedComponent = null;
+            renderPropertiesPanel();
+        }
+        
+        // Refresh the UI
+        renderComponentTree();
+        updateLivePreview();
+    }
+}
+
+function removeComponentById(components, id) {
+    return components.filter(component => {
+        if (component.id === id) {
+            return false; // Remove this component
+        }
+        
+        // If this component has children, recursively check them
+        if (component.children && component.children.length > 0) {
+            component.children = removeComponentById(component.children, id);
+        }
+        
+        return true; // Keep this component
+    });
+}
+
+function renderPropertiesPanel() {
+    const panel = document.getElementById('propertiesPanel');
+    
+    if (!selectedComponent) {
+        panel.innerHTML = '<p class="text-gray-500 text-center">Select a component to edit properties</p>';
+        return;
+    }
+    
+    const component = findComponentById(templateData, selectedComponent);
+    if (!component) return;
+    
+    const isInteractive = component.tag.startsWith('I');
+    
+    let html = `
+        <div class="space-y-4">
+            <h3 class="font-medium text-gray-900">${component.tag} Properties</h3>
+            
+            <!-- Tag (read-only) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tag</label>
+                <input type="text" value="${component.tag}" readonly class="w-full p-2 border rounded bg-gray-100">
+            </div>
+    `;
+    
+    // Common properties
+    if (component.class !== undefined) {
+        html += `
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">CSS Classes</label>
+                <input type="text" value="${component.class || ''}" 
+                       onchange="updateComponentProperty('class', this.value)"
+                       class="w-full p-2 border rounded">
+            </div>
+        `;
+    }
+    
+    if (component.value !== undefined) {
+        html += `
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                <input type="text" value="${component.value || ''}" 
+                       onchange="updateComponentProperty('value', this.value)"
+                       class="w-full p-2 border rounded">
+            </div>
+        `;
+    }
+    
+    // Interactive component properties
+    if (isInteractive) {
+        if (component.type !== undefined) {
+            html += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select onchange="updateComponentProperty('type', this.value)" class="w-full p-2 border rounded">
+                        <option value="Editable" ${component.type === 'Editable' ? 'selected' : ''}>Editable</option>
+                        <option value="display" ${component.type === 'display' ? 'selected' : ''}>Display</option>
+                    </select>
+                </div>
+            `;
+        }
+        
+        if (component.title !== undefined) {
+            html += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input type="text" value="${component.title || ''}" 
+                           onchange="updateComponentProperty('title', this.value)"
+                           class="w-full p-2 border rounded">
+                </div>
+            `;
+        }
+        
+        if (component.var !== undefined) {
+            html += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Variable</label>
+                    <input type="text" value="${component.var || ''}" 
+                           onchange="updateComponentProperty('var', this.value)"
+                           class="w-full p-2 border rounded">
+                </div>
+            `;
+        }
+        
+        if (component.choices) {
+            html += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Choices</label>
+                    <textarea onchange="updateComponentProperty('choices', this.value.split(',').map(s => s.trim()))"
+                              class="w-full p-2 border rounded">${component.choices.join(', ')}</textarea>
+                </div>
+            `;
+        }
+        
+        if (component.options) {
+            html += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Options</label>
+                    <textarea onchange="updateComponentProperty('options', this.value.split(',').map(s => s.trim()))"
+                              class="w-full p-2 border rounded">${component.options.join(', ')}</textarea>
+                </div>
+            `;
+        }
+        
+        if (component.variant) {
+            html += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Variant</label>
+                    <select onchange="updateComponentProperty('variant', this.value)" class="w-full p-2 border rounded">
+                        <option value="default" ${component.variant === 'default' ? 'selected' : ''}>Default</option>
+                        <option value="destructive" ${component.variant === 'destructive' ? 'selected' : ''}>Destructive</option>
+                        <option value="outline" ${component.variant === 'outline' ? 'selected' : ''}>Outline</option>
+                        <option value="secondary" ${component.variant === 'secondary' ? 'selected' : ''}>Secondary</option>
+                    </select>
+                </div>
+            `;
+        }
+        
+        if (component.size) {
+            html += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Size</label>
+                    <select onchange="updateComponentProperty('size', this.value)" class="w-full p-2 border rounded">
+                        <option value="default" ${component.size === 'default' ? 'selected' : ''}>Default</option>
+                        <option value="sm" ${component.size === 'sm' ? 'selected' : ''}>Small</option>
+                        <option value="lg" ${component.size === 'lg' ? 'selected' : ''}>Large</option>
+                        <option value="icon" ${component.size === 'icon' ? 'selected' : ''}>Icon</option>
+                    </select>
+                </div>
+            `;
+        }
+    }
+    
+    // Add child component button
+    if (component.tag === 'div' || component.tag.startsWith('I')) {
+        html += `
+            <div class="pt-4 border-t">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Add Child Component</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="addComponentToParent('${component.id}', 'div')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Container</button>
+                    <button onclick="addComponentToParent('${component.id}', 'p')" class="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">Text</button>
+                    <button onclick="addComponentToParent('${component.id}', 'Itext')" class="text-xs px-2 py-1 bg-orange-500 text-white rounded hover:bg-orange-600">Input</button>
+                    <button onclick="addComponentToParent('${component.id}', 'Ibutton')" class="text-xs px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">Button</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    panel.innerHTML = html;
+}
+
+function updateComponentProperty(property, value) {
+    if (!selectedComponent) return;
+    
+    const component = findComponentById(templateData, selectedComponent);
+    if (component) {
+        component[property] = value;
+        renderComponentTree();
+        updateLivePreview();
+    }
+}
+
+function updateLivePreview() {
+    const preview = document.getElementById('livePreview');
+    try {
+        const html = generateHTML(templateData, globalVars);
+        preview.innerHTML = html;
+    } catch (error) {
+        preview.innerHTML = `<div class="text-red-500 text-sm">Error: ${error.message}</div>`;
+    }
+}
+
+function generateHTML(components, vars = {}) {
+    return components.map(component => renderComponentToHTML(component, vars)).join('');
+}
+
+function renderComponentToHTML(component, vars = {}) {
+    const tag = component.tag;
+    const classes = component.class || '';
+    const value = resolveValue(component.value, component.var, vars);
+    
+    if (tag.startsWith('I')) {
+        return renderInteractiveComponent(component, vars);
+    }
+    
+    // Regular HTML elements
+    if (component.children && component.children.length > 0) {
+        const childrenHTML = component.children.map(child => renderComponentToHTML(child, vars)).join('');
+        return `<${tag} class="${classes}">${childrenHTML}</${tag}>`;
+    } else {
+        return `<${tag} class="${classes}">${value}</${tag}>`;
+    }
+}
+
+function renderInteractiveComponent(component, vars = {}) {
+    const tag = component.tag;
+    const classes = component.class || '';
+    const title = component.title || '';
+    const value = resolveValue(component.value, component.var, vars);
+    const type = component.type || 'Editable';
+    
+    if (type === 'display') {
+        return `<div class="${classes}"><strong>${title}:</strong> ${value}</div>`;
+    }
+    
+    switch (tag) {
+        case 'Itext':
+            return `<div class="mb-2"><label class="block text-sm font-medium mb-1">${title}</label><input type="text" value="${value}" class="${classes}" readonly></div>`;
+        case 'IBool':
+            return `<div class="mb-2"><label class="flex items-center"><input type="checkbox" ${value ? 'checked' : ''} class="${classes}" readonly> <span class="ml-2">${title}</span></label></div>`;
+        case 'IChoice':
+            const choices = component.choices || [];
+            const options = choices.map(choice => `<option value="${choice}" ${choice === value ? 'selected' : ''}>${choice}</option>`).join('');
+            return `<div class="mb-2"><label class="block text-sm font-medium mb-1">${title}</label><select class="${classes}" disabled>${options}</select></div>`;
+        case 'IToggle':
+            const toggleOptions = component.options || [];
+            const toggles = toggleOptions.map(option => `<button class="px-3 py-1 border rounded ${option === value ? 'bg-blue-500 text-white' : 'bg-white'}">${option}</button>`).join('');
+            return `<div class="mb-2"><label class="block text-sm font-medium mb-1">${title}</label><div class="${classes}">${toggles}</div></div>`;
+        case 'Imultiline':
+            return `<div class="mb-2"><label class="block text-sm font-medium mb-1">${title}</label><textarea class="${classes}" readonly>${value}</textarea></div>`;
+        case 'Ibutton':
+        case 'I_V_Button':
+            return `<div class="mb-2"><button class="${classes}" disabled>${title}</button></div>`;
+        default:
+            return `<div class="${classes}">${title}: ${value}</div>`;
+    }
+}
+
+function resolveValue(value, varName, vars) {
+    if (varName && vars[varName] !== undefined) {
+        return vars[varName];
+    }
+    return value || '';
+}
+
+function toggleJsonView() {
+    const visualEditor = document.getElementById('visualEditor');
+    const jsonEditor = document.getElementById('jsonEditor');
+    
+    if (visualEditor.classList.contains('hidden')) {
+        // Switch to visual editor
+        visualEditor.classList.remove('hidden');
+        jsonEditor.classList.add('hidden');
+        // Update JSON from visual editor
+        document.getElementById('templateJson').value = JSON.stringify(templateData, null, 2);
+    } else {
+        // Switch to JSON editor
+        visualEditor.classList.add('hidden');
+        jsonEditor.classList.remove('hidden');
+        // Update visual editor from JSON
+        try {
+            const jsonData = document.getElementById('templateJson').value;
+            templateData = JSON.parse(jsonData);
+            addComponentIds(templateData);
+            renderComponentTree();
+            updateLivePreview();
+        } catch (error) {
+            alert('Invalid JSON: ' + error.message);
+        }
+    }
+}
+
+function updatePreview() {
+    const templateJson = document.getElementById('templateJson').value;
+    const globalVarsJson = document.getElementById('globalVars').value;
+    
+    try {
+        const template = JSON.parse(templateJson);
+        const vars = JSON.parse(globalVarsJson || '{}');
+        
+        // Update preview with formatted JSON
+        document.getElementById('preview').innerHTML = `
+            <pre class="text-xs overflow-auto">${JSON.stringify(template, null, 2)}</pre>
+            <div class="mt-4 pt-4 border-t">
+                <h4 class="font-medium mb-2">Global Variables:</h4>
+                <pre class="text-xs overflow-auto">${JSON.stringify(vars, null, 2)}</pre>
+            </div>
+        `;
+    } catch (error) {
+        document.getElementById('preview').innerHTML = `
+            <div class="text-red-500 text-sm">
+                <strong>JSON Error:</strong> ${error.message}
+            </div>
+        `;
+    }
+}
+
+function validateJson() {
+    const templateJson = document.getElementById('templateJson').value;
+    const globalVarsJson = document.getElementById('globalVars').value;
+    
+    try {
+        const template = JSON.parse(templateJson);
+        const vars = JSON.parse(globalVarsJson || '{}');
+        
+        // Basic validation
+        if (!Array.isArray(template)) {
+            alert('Template must be an array of components');
+            return;
+        }
+        
+        // Validate each component
+        for (let i = 0; i < template.length; i++) {
+            const component = template[i];
+            if (!component.tag) {
+                alert(`Component ${i}: Missing 'tag' property`);
+                return;
+            }
+        }
+        
+        alert('✅ JSON is valid!');
+    } catch (error) {
+        alert('❌ Invalid JSON: ' + error.message);
+    }
+}
+
+function formatJson() {
+    const templateJson = document.getElementById('templateJson').value;
+    const globalVarsJson = document.getElementById('globalVars').value;
+    
+    try {
+        const template = JSON.parse(templateJson);
+        const vars = JSON.parse(globalVarsJson || '{}');
+        
+        document.getElementById('templateJson').value = JSON.stringify(template, null, 2);
+        document.getElementById('globalVars').value = JSON.stringify(vars, null, 2);
+        
+        updatePreview();
+    } catch (error) {
+        alert('Cannot format invalid JSON: ' + error.message);
+    }
+}
+
+async function saveTemplate() {
+    try {
+        // Get current template data
+        const currentTemplateData = templateData;
+        const globalVarsData = globalVars;
+        
+        const response = await fetch(`/cardgen/save/{{ template.id }}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(currentTemplateData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Template saved successfully!');
+        } else {
+            alert('Error saving template: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error saving template: ' + error.message);
+    }
+}
+</script>
+
+<style>
+.component-item {
+    @apply p-4 border border-gray-200 rounded cursor-move hover:bg-gray-50 transition-colors text-sm flex items-center space-x-3;
+}
+
+.component-node {
+    @apply transition-colors cursor-pointer;
+}
+
+.component-node:hover {
+    @apply shadow-sm;
+}
+
+.drag-over {
+    @apply bg-blue-50 border-blue-300;
+}
+
+/* Custom scrollbar for panels */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Resize handles */
+.cursor-col-resize {
+    cursor: col-resize;
+}
+
+.cursor-col-resize:hover {
+    background-color: #9ca3af;
+}
+
+/* Component palette popup */
+#componentPalette {
+    backdrop-filter: blur(4px);
+}
+
+#componentPalette .bg-white {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Panel shadows */
+.bg-white:not(#componentPalette .bg-white) {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Popup animation */
+#componentPalette {
+    transition: opacity 0.2s ease-in-out;
+}
+
+#componentPalette.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#componentPalette:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+</style>
+{% endblock %}

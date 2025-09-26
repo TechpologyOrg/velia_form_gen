@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+{% block title %}Velia Card Generator{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Velia Card Generator</h1>
+            <p class="text-gray-600 mt-1">Create dynamic cards with custom layouts and content</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Organizations Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Organizations</h2>
+                        
+                        {% if orgs %}
+                            <div class="space-y-3">
+                                {% for org in orgs %}
+                                    <div class="border border-gray-200 rounded-lg">
+                                        <div class="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                                             onclick="toggleOrgTemplates({{ org.id }})">
+                                            <div class="flex justify-between items-center">
+                                                <h3 class="font-medium text-gray-900">{{ org.name }}</h3>
+                                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" 
+                                                     id="arrow-{{ org.id }}" 
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="org_templates_{{ org.id }}" class="hidden border-t border-gray-200 p-4">
+                                            <!-- Templates will be loaded here -->
+                                            <div class="text-center py-4">
+                                                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                                                <p class="text-sm text-gray-500 mt-2">Loading templates...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <div class="text-gray-400 mb-4">
+                                    <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-500 mb-4">No organizations found</p>
+                                <p class="text-sm text-gray-400">Create an organization in the Django admin to get started</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div class="text-center">
+                        <div class="text-gray-400 mb-6">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Welcome to Velia Card Generator</h3>
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                            Create dynamic, customizable cards with flexible layouts. Select an organization from the sidebar to view and create card templates.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">🎨 Flexible Layouts</h4>
+                                <p class="text-sm text-gray-600">Create cards with custom layouts, images, text, and interactive elements</p>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">📊 Data Integration</h4>
+                                <p class="text-sm text-gray-600">Connect cards to data sources and generate multiple cards from templates</p>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">🔄 Template System</h4>
+                                <p class="text-sm text-gray-600">Create reusable templates and generate multiple cards with different data</p>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">⚡ Real-time Preview</h4>
+                                <p class="text-sm text-gray-600">See your cards as you build them with live preview functionality</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Template Modal -->
+<div id="createTemplateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
+        <h3 class="text-lg font-semibold mb-4">Create New Card Template</h3>
+        <form id="createTemplateForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Template Name</label>
+                <input type="text" id="templateName" name="name" 
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter template name" required>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideCreateTemplateModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    Create Template
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Import Template Modal -->
+<div id="importTemplateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
+        <h3 class="text-lg font-semibold mb-4">Import Card Template from JSON</h3>
+        <form id="importTemplateForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Template Name</label>
+                <input type="text" id="importTemplateName" name="name" 
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter template name" required>
+            </div>
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Template Data</label>
+                    <button type="button" onclick="loadExampleCardData()" 
+                            class="text-blue-500 hover:text-blue-600 text-sm">
+                        📋 Load Example
+                    </button>
+                </div>
+                <textarea id="importJsonData" name="json_data" 
+                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                          rows="15" 
+                          placeholder="Paste your card template JSON here..."
+                          required></textarea>
+                <p class="text-xs text-gray-500 mt-1">
+                    Paste your card template JSON schema. The system will validate the structure before importing.
+                </p>
+            </div>
+            <div class="mb-4">
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="validateJson" checked class="rounded">
+                    <label for="validateJson" class="text-sm text-gray-700">Validate JSON before importing</label>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideImportTemplateModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="button" onclick="validateCardJsonData()" 
+                        class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                    Validate JSON
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Import Template
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleOrgTemplates(orgId) {
+    const target = document.getElementById(`org_templates_${orgId}`);
+    const arrow = document.getElementById(`arrow-${orgId}`);
+    
+    if (target.classList.contains('hidden')) {
+        // Show templates
+        target.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+        
+        // Load templates if not already loaded
+        if (target.innerHTML.includes('Loading templates...')) {
+            loadOrgTemplates(orgId);
+        }
+    } else {
+        // Hide templates
+        target.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+function loadOrgTemplates(orgId) {
+    const target = document.getElementById(`org_templates_${orgId}`);
+    
+    fetch(`{% url 'cardgen_templates' 0 %}`.replace('0', orgId))
+        .then(response => response.text())
+        .then(html => { 
+            target.innerHTML = html; 
+        })
+        .catch(error => {
+            target.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-red-500 text-sm">Error loading templates</p>
+                </div>
+            `;
+        });
+}
+
+function showCreateTemplateModal(orgId) {
+    document.getElementById('createTemplateModal').classList.remove('hidden');
+    document.getElementById('createTemplateModal').classList.add('flex');
+    document.getElementById('createTemplateForm').dataset.orgId = orgId;
+}
+
+function hideCreateTemplateModal() {
+    document.getElementById('createTemplateModal').classList.add('hidden');
+    document.getElementById('createTemplateModal').classList.remove('flex');
+    document.getElementById('createTemplateForm').reset();
+}
+
+function showImportTemplateModal(orgId) {
+    document.getElementById('importTemplateModal').classList.remove('hidden');
+    document.getElementById('importTemplateModal').classList.add('flex');
+    document.getElementById('importTemplateForm').dataset.orgId = orgId;
+}
+
+function hideImportTemplateModal() {
+    document.getElementById('importTemplateModal').classList.add('hidden');
+    document.getElementById('importTemplateModal').classList.remove('flex');
+    document.getElementById('importTemplateForm').reset();
+}
+
+function loadExampleCardData() {
+    const exampleData = `{
+  "cards": [
+    {
+      "id": 1,
+      "title": "Product Card",
+      "type": "card",
+      "layout": "vertical",
+      "elements": [
+        {
+          "id": "image",
+          "type": "image",
+          "src": "{{product.image}}",
+          "alt": "{{product.name}}",
+          "width": "100%",
+          "height": "200px"
+        },
+        {
+          "id": "title",
+          "type": "text",
+          "content": "{{product.name}}",
+          "style": {
+            "fontSize": "18px",
+            "fontWeight": "bold",
+            "margin": "10px 0"
+          }
+        },
+        {
+          "id": "price",
+          "type": "text",
+          "content": "${{product.price}}",
+          "style": {
+            "fontSize": "16px",
+            "color": "#e53e3e",
+            "fontWeight": "bold"
+          }
+        },
+        {
+          "id": "description",
+          "type": "text",
+          "content": "{{product.description}}",
+          "style": {
+            "fontSize": "14px",
+            "color": "#666",
+            "margin": "10px 0"
+          }
+        }
+      ]
+    }
+  ],
+  "vars": {
+    "product": {
+      "name": "Sample Product",
+      "price": "99.99",
+      "description": "This is a sample product description",
+      "image": "https://via.placeholder.com/300x200"
+    }
+  },
+  "title": "Product Card Template",
+  "description": "A template for displaying product information"
+}`;
+    
+    document.getElementById('importJsonData').value = exampleData;
+    document.getElementById('importTemplateName').value = 'Product Card Template';
+}
+
+function validateCardJsonData() {
+    const jsonData = document.getElementById('importJsonData').value.trim();
+    
+    if (!jsonData) {
+        alert('Please enter JSON data to validate.');
+        return;
+    }
+    
+    try {
+        const parsed = JSON.parse(jsonData);
+        
+        // Basic schema validation for cards
+        const errors = [];
+        
+        if (!parsed.cards || !Array.isArray(parsed.cards)) {
+            errors.push('Missing or invalid "cards" array');
+        }
+        
+        if (parsed.cards && parsed.cards.length > 0) {
+            parsed.cards.forEach((card, index) => {
+                if (!card.id && card.id !== 0) {
+                    errors.push(`Card ${index}: Missing "id" field`);
+                }
+                if (!card.title) {
+                    errors.push(`Card ${index}: Missing "title" field`);
+                }
+                if (!card.type || card.type !== 'card') {
+                    errors.push(`Card ${index}: Missing or invalid "type" field (should be "card")`);
+                }
+            });
+        }
+        
+        if (errors.length > 0) {
+            alert('JSON Validation Errors:\n\n' + errors.join('\n'));
+        } else {
+            alert('✅ JSON is valid! Card template structure looks good.');
+        }
+        
+    } catch (error) {
+        alert('❌ Invalid JSON: ' + error.message);
+    }
+}
+
+// Form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('createTemplateForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('templateName').value,
+            organisation_id: this.dataset.orgId
+        };
+        
+        try {
+            const response = await fetch('/cardgen/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                hideCreateTemplateModal();
+                window.location.href = result.redirect_url;
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error creating template: ' + error.message);
+        }
+    });
+
+    document.getElementById('importTemplateForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const templateName = document.getElementById('importTemplateName').value;
+        const jsonData = document.getElementById('importJsonData').value.trim();
+        const validateJson = document.getElementById('validateJson').checked;
+        
+        if (!templateName || !jsonData) {
+            alert('Please fill in both template name and JSON data.');
+            return;
+        }
+        
+        // Parse and validate the JSON data
+        try {
+            const parsed = JSON.parse(jsonData);
+            
+            // Validate JSON if checkbox is checked
+            if (validateJson) {
+                if (!parsed.cards || !Array.isArray(parsed.cards)) {
+                    alert('Invalid JSON: Missing or invalid "cards" array');
+                    return;
+                }
+            }
+        } catch (error) {
+            alert('Invalid JSON: ' + error.message);
+            return;
+        }
+        
+        const formData = {
+            name: templateName,
+            organisation_id: this.dataset.orgId,
+            json_data: jsonData
+        };
+        
+        try {
+            const response = await fetch('/cardgen/import/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                hideImportTemplateModal();
+                window.location.href = result.redirect_url;
+            } else {
+                alert('Error importing template: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error importing template: ' + error.message);
+        }
+    });
+});
+
+// Delete template function
+async function deleteTemplate(templateId, templateName) {
+    if (!confirm(`Are you sure you want to delete the template "${templateName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/cardgen/delete/${templateId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Template deleted successfully!');
+            // Reload the templates for the organization
+            loadOrgTemplates(result.org_id);
+        } else {
+            alert('Error deleting template: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error deleting template: ' + error.message);
+    }
+}
+</script>
+{% endblock %}
