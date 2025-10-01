@@ -54,35 +54,3 @@
     </button>
 </div>
 
-<script>
-function editTemplate(templateId) {
-    window.location.href = `/cardgen/editor/${templateId}/`;
-}
-
-
-function deleteTemplate(templateId, templateName) {
-    if (!confirm(`Are you sure you want to delete the template "${templateName}"? This action cannot be undone.`)) {
-        return;
-    }
-    
-    fetch(`/cardgen/delete/${templateId}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('Template deleted successfully!');
-            // Reload the templates for the organization
-            loadOrgTemplates(result.org_id);
-        } else {
-            alert('Error deleting template: ' + result.error);
-        }
-    })
-    .catch(error => {
-        alert('Error deleting template: ' + error.message);
-    });
-}
-</script>

@@ -461,6 +461,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Edit template function
+function editTemplate(templateId) {
+    window.location.href = `/cardgen/editor/${templateId}/`;
+}
+
 // Delete template function
 async function deleteTemplate(templateId, templateName) {
     if (!confirm(`Are you sure you want to delete the template "${templateName}"? This action cannot be undone.`)) {
