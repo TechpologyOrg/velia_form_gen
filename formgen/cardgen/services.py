@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Initialize OpenAI client
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+client = OpenAI()
 
 def get_ai_assistant_response(user_message, template_data=None, global_vars=None, selected_component=None):
     """
