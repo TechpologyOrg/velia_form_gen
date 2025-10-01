@@ -1406,17 +1406,35 @@ async function processUserMessage(message) {
 function handleGPTResponse(response) {
     console.log('GPT Response received:', response);
     
-    // Check if response starts with "@CODE"
-    if (response.trim().startsWith('@CODE')) {
-        // Extract JSON after @CODE line
-        const lines = response.trim().split('\n');
-        const codeLineIndex = lines.findIndex(line => line.trim() === '@CODE');
+    // Check if response contains "@JSON" or "@CODE"
+    const trimmedResponse = response.trim();
+    const isCodeResponse = trimmedResponse.startsWith('@CODE') || trimmedResponse.includes('@JSON');
+    
+    if (isCodeResponse) {
+        let jsonString = '';
         
-        if (codeLineIndex !== -1 && codeLineIndex + 1 < lines.length) {
-            // Get all lines after @CODE
-            const jsonLines = lines.slice(codeLineIndex + 1);
-            const jsonString = jsonLines.join('\n').trim();
+        // Handle @JSON format (with markdown code blocks)
+        if (trimmedResponse.includes('@JSON')) {
+            // Look for JSON in markdown code blocks
+            const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+            if (jsonMatch && jsonMatch[1]) {
+                jsonString = jsonMatch[1].trim();
+            }
+        }
+        
+        // Handle @CODE format (simple JSON after @CODE line)
+        else if (trimmedResponse.startsWith('@CODE')) {
+            const lines = trimmedResponse.split('\n');
+            const codeLineIndex = lines.findIndex(line => line.trim() === '@CODE');
             
+            if (codeLineIndex !== -1 && codeLineIndex + 1 < lines.length) {
+                const jsonLines = lines.slice(codeLineIndex + 1);
+                jsonString = jsonLines.join('\n').trim();
+            }
+        }
+        
+        // Try to parse and apply the JSON
+        if (jsonString) {
             try {
                 // Parse the JSON to validate it
                 const jsonData = JSON.parse(jsonString);
@@ -1431,18 +1449,31 @@ function handleGPTResponse(response) {
                 // Auto-save the changes
                 autoSave();
                 
-                // Respond with "Done." in chat
-                addMessageToChat("Done.", 'ai');
+                // Extract the descriptive text (everything after the code block)
+                let descriptiveText = '';
+                if (trimmedResponse.includes('@JSON')) {
+                    const afterCodeBlock = response.split('```').pop();
+                    if (afterCodeBlock && afterCodeBlock.trim()) {
+                        descriptiveText = afterCodeBlock.trim();
+                    }
+                } else {
+                    // For @CODE, show "Done." 
+                    descriptiveText = 'Done.';
+                }
+                
+                // Show the descriptive text in chat
+                addMessageToChat(descriptiveText, 'ai');
                 
                 console.log('Template updated with AI-generated code');
                 
             } catch (error) {
                 console.error('Invalid JSON from AI:', error);
+                console.error('JSON string that failed:', jsonString);
                 // If JSON is invalid, show the full response
                 addMessageToChat(response, 'ai');
             }
         } else {
-            // If @CODE but no JSON found, show full response
+            // If @JSON/@CODE but no JSON found, show full response
             addMessageToChat(response, 'ai');
         }
     } else {
