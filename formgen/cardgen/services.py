@@ -54,18 +54,14 @@ def get_ai_assistant_response(user_message, template_data=None, global_vars=None
         full_message = f"{user_message}\n\nContext:\n{context_info}"
         
         # Use the Published Prompt API
+        # Published Prompts might use different parameter names
+        # Try passing the user message as 'input' or 'query' parameter
         response = client.responses.create(
             prompt={
                 "id": "pmpt_68dda5c5844c81939419c1ccd2e0ce6001e32a296b29b91d",
                 "version": "1"
             },
-            # Pass the user message and context as additional data
-            messages=[
-                {
-                    "role": "user", 
-                    "content": full_message
-                }
-            ]
+            input=full_message  # Try 'input' parameter
         )
         
         # Extract the response content
@@ -102,12 +98,7 @@ def estimate_project_time(problem_description, worker_types, stage):
                 "id": "pmpt_68dda5c5844c81939419c1ccd2e0ce6001e32a296b29b91d",
                 "version": "1"
             },
-            messages=[
-                {
-                    "role": "user",
-                    "content": message_content
-                }
-            ]
+            input=message_content  # Try 'input' parameter
         )
         
         if hasattr(response, 'choices') and len(response.choices) > 0:
