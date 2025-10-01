@@ -401,6 +401,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update JSON preview
         updateJSONPreview();
         
+        // Initialize drag and drop
+        initializeDragAndDrop();
+        
         console.log('Editor initialized successfully');
         
     } catch (error) {
@@ -449,7 +452,9 @@ function renderHierarchy() {
 
 function createSectionElement(section, index) {
     const div = document.createElement('div');
-    div.className = 'border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer';
+    div.className = 'border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer draggable-section';
+    div.draggable = true;
+    div.dataset.sectionIndex = index;
     div.onclick = () => selectSection(index);
     
     const visibilityInfo = section.visibleWhen ? 
@@ -465,10 +470,27 @@ function createSectionElement(section, index) {
     
     div.innerHTML = `
         <div class="flex justify-between items-start">
-            <div class="flex-1">
-                <h3 class="font-medium text-gray-900">${section.title || 'Untitled Section'}</h3>
-                <p class="text-sm text-gray-600">${section.questions ? section.questions.length : 0} questions</p>
-                ${visibilityInfo}
+            <div class="flex items-start space-x-2 flex-1">
+                <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 p-1" 
+                     onmousedown="event.stopPropagation()" 
+                     title="Drag to reorder">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                        <circle cx="2" cy="2" r="1"/>
+                        <circle cx="6" cy="2" r="1"/>
+                        <circle cx="10" cy="2" r="1"/>
+                        <circle cx="2" cy="6" r="1"/>
+                        <circle cx="6" cy="6" r="1"/>
+                        <circle cx="10" cy="6" r="1"/>
+                        <circle cx="2" cy="10" r="1"/>
+                        <circle cx="6" cy="10" r="1"/>
+                        <circle cx="10" cy="10" r="1"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-medium text-gray-900">${section.title || 'Untitled Section'}</h3>
+                    <p class="text-sm text-gray-600">${section.questions ? section.questions.length : 0} questions</p>
+                    ${visibilityInfo}
+                </div>
             </div>
             <div class="flex space-x-1 ml-2">
                 <button onclick="event.stopPropagation(); editSection(${index})" 
@@ -561,13 +583,33 @@ function createQuestionElement(question, sectionIndex, questionIndex) {
         </div>` : '';
     
     return `
-        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 draggable-question" 
+             draggable="true" 
+             data-section-index="${sectionIndex}" 
+             data-question-index="${questionIndex}">
             <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <h4 class="font-medium text-gray-900">${question.title || 'Untitled Question'}</h4>
-                    <p class="text-sm text-gray-600 mb-2">Type: ${question.type || 'text'}</p>
-                    ${question.description ? `<p class="text-sm text-gray-500">${question.description}</p>` : ''}
-                    ${visibilityInfo}
+                <div class="flex items-start space-x-2 flex-1">
+                    <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 p-1" 
+                         onmousedown="event.stopPropagation()" 
+                         title="Drag to reorder">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                            <circle cx="2" cy="2" r="1"/>
+                            <circle cx="6" cy="2" r="1"/>
+                            <circle cx="10" cy="2" r="1"/>
+                            <circle cx="2" cy="6" r="1"/>
+                            <circle cx="6" cy="6" r="1"/>
+                            <circle cx="10" cy="6" r="1"/>
+                            <circle cx="2" cy="10" r="1"/>
+                            <circle cx="6" cy="10" r="1"/>
+                            <circle cx="10" cy="10" r="1"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-900">${question.title || 'Untitled Question'}</h4>
+                        <p class="text-sm text-gray-600 mb-2">Type: ${question.type || 'text'}</p>
+                        ${question.description ? `<p class="text-sm text-gray-500">${question.description}</p>` : ''}
+                        ${visibilityInfo}
+                    </div>
                 </div>
                 <div class="flex space-x-2 ml-4">
                     <button onclick="editQuestion(${sectionIndex}, ${questionIndex})" 
@@ -989,6 +1031,29 @@ function saveForm() {
     .catch(error => {
         console.error('Error:', error);
         alert('Error saving form: ' + error.message);
+    });
+}
+
+// Auto-save function for drag and drop operations
+function autoSave() {
+    fetch(`/api/save-form/{{ form.id }}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(currentSchema)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Auto-saved form after reordering');
+        } else {
+            console.error('Auto-save failed:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Auto-save error:', error);
     });
 }
 
@@ -1663,6 +1728,187 @@ function addOperatorEventListeners() {
     }
 }
 
+// Drag and Drop functionality
+function initializeDragAndDrop() {
+    // Section drag and drop
+    const hierarchyTree = document.getElementById('hierarchyTree');
+    
+    // Make sections draggable
+    hierarchyTree.addEventListener('dragstart', function(e) {
+        if (e.target.classList.contains('draggable-section')) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.sectionIndex);
+            e.target.style.opacity = '0.5';
+        }
+    });
+    
+    hierarchyTree.addEventListener('dragend', function(e) {
+        if (e.target.classList.contains('draggable-section')) {
+            e.target.style.opacity = '1';
+        }
+    });
+    
+    hierarchyTree.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(hierarchyTree, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        if (afterElement == null) {
+            hierarchyTree.appendChild(dragging);
+        } else {
+            hierarchyTree.insertBefore(dragging, afterElement);
+        }
+    });
+    
+    hierarchyTree.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const sectionIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        const afterElement = getDragAfterElement(hierarchyTree, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        
+        if (afterElement == null) {
+            hierarchyTree.appendChild(dragging);
+        } else {
+            hierarchyTree.insertBefore(dragging, afterElement);
+        }
+        
+        // Reorder sections in data
+        reorderSections(sectionIndex, afterElement);
+    });
+    
+    // Question drag and drop
+    document.addEventListener('dragstart', function(e) {
+        if (e.target.classList.contains('draggable-question')) {
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                sectionIndex: parseInt(e.target.dataset.sectionIndex),
+                questionIndex: parseInt(e.target.dataset.questionIndex)
+            }));
+            e.target.style.opacity = '0.5';
+            e.target.classList.add('dragging');
+        }
+    });
+    
+    document.addEventListener('dragend', function(e) {
+        if (e.target.classList.contains('draggable-question')) {
+            e.target.style.opacity = '1';
+            e.target.classList.remove('dragging');
+        }
+    });
+    
+    document.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        if (e.target.closest('.draggable-question') || e.target.closest('#editorContent .space-y-4')) {
+            const questionsContainer = e.target.closest('#editorContent .space-y-4');
+            if (questionsContainer) {
+                const afterElement = getDragAfterElement(questionsContainer, e.clientY);
+                const dragging = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    questionsContainer.appendChild(dragging);
+                } else {
+                    questionsContainer.insertBefore(dragging, afterElement);
+                }
+            }
+        }
+    });
+    
+    document.addEventListener('drop', function(e) {
+        e.preventDefault();
+        if (e.target.closest('#editorContent .space-y-4')) {
+            const questionsContainer = e.target.closest('#editorContent .space-y-4');
+            const dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const afterElement = getDragAfterElement(questionsContainer, e.clientY);
+            const dragging = document.querySelector('.dragging');
+            
+            if (afterElement == null) {
+                questionsContainer.appendChild(dragging);
+            } else {
+                questionsContainer.insertBefore(dragging, afterElement);
+            }
+            
+            // Reorder questions in data
+            reorderQuestions(dragData.sectionIndex, dragData.questionIndex, afterElement);
+        }
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable-section:not(.dragging), .draggable-question:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function reorderSections(fromIndex, afterElement) {
+    const sections = currentSchema.answers;
+    const draggedSection = sections[fromIndex];
+    
+    // Remove from original position
+    sections.splice(fromIndex, 1);
+    
+    // Find new position
+    let newIndex = sections.length; // Default to end
+    if (afterElement) {
+        const afterIndex = parseInt(afterElement.dataset.sectionIndex);
+        newIndex = sections.findIndex(section => section.id === currentSchema.answers[afterIndex].id);
+    }
+    
+    // Insert at new position
+    sections.splice(newIndex, 0, draggedSection);
+    
+    // Update selected section index if needed
+    if (selectedSectionIndex === fromIndex) {
+        selectedSectionIndex = newIndex;
+    } else if (selectedSectionIndex > fromIndex && selectedSectionIndex <= newIndex) {
+        selectedSectionIndex--;
+    } else if (selectedSectionIndex < fromIndex && selectedSectionIndex >= newIndex) {
+        selectedSectionIndex++;
+    }
+    
+    // Re-render and update
+    renderHierarchy();
+    updateJSONPreview();
+    
+    // Re-select the moved section
+    if (selectedSectionIndex !== null) {
+        selectSection(selectedSectionIndex);
+    }
+    
+    // Auto-save after reordering
+    autoSave();
+}
+
+function reorderQuestions(fromSectionIndex, fromQuestionIndex, afterElement) {
+    const section = currentSchema.answers[fromSectionIndex];
+    const questions = section.questions;
+    const draggedQuestion = questions[fromQuestionIndex];
+    
+    // Remove from original position
+    questions.splice(fromQuestionIndex, 1);
+    
+    // Find new position
+    let newIndex = questions.length; // Default to end
+    if (afterElement) {
+        const afterQuestionIndex = parseInt(afterElement.dataset.questionIndex);
+        newIndex = afterQuestionIndex;
+    }
+    
+    // Insert at new position
+    questions.splice(newIndex, 0, draggedQuestion);
+    
+    // Re-render the section editor
+    renderSectionEditor(section, fromSectionIndex);
+    updateJSONPreview();
+    
+    // Auto-save after reordering
+    autoSave();
+}
+
 // Add CSRF token
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
@@ -1678,4 +1924,96 @@ document.addEventListener('DOMContentLoaded', function() {
     addOperatorEventListeners();
 });
 </script>
+
+<style>
+/* Drag and Drop Styles */
+.draggable-section, .draggable-question {
+    transition: all 0.2s ease;
+}
+
+.draggable-section:hover, .draggable-question:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.draggable-section.dragging, .draggable-question.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    z-index: 1000;
+}
+
+.drag-handle {
+    transition: color 0.2s ease;
+}
+
+.drag-handle:hover {
+    color: #6b7280 !important;
+}
+
+/* Drop zone indicators */
+.draggable-section.drag-over, .draggable-question.drag-over {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+/* Smooth animations for reordering */
+#hierarchyTree, #editorContent .space-y-4 {
+    transition: all 0.3s ease;
+}
+
+/* Visual feedback for drag operations */
+.dragging {
+    cursor: grabbing !important;
+}
+
+.draggable-section:not(.dragging), .draggable-question:not(.dragging) {
+    cursor: grab;
+}
+
+/* Improved drag handle visibility */
+.drag-handle svg {
+    transition: all 0.2s ease;
+}
+
+.drag-handle:hover svg {
+    transform: scale(1.1);
+}
+
+/* Section and question styling improvements */
+.draggable-section {
+    border-left: 3px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.draggable-section:hover {
+    border-left-color: #3b82f6;
+}
+
+.draggable-question {
+    border-left: 3px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.draggable-question:hover {
+    border-left-color: #10b981;
+}
+
+/* Selection state improvements */
+.draggable-section.ring-2 {
+    border-left-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+/* Responsive drag handle */
+@media (max-width: 768px) {
+    .drag-handle {
+        padding: 0.25rem;
+    }
+    
+    .drag-handle svg {
+        width: 10px;
+        height: 10px;
+    }
+}
+</style>
 {% endblock %}

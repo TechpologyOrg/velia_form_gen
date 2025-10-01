@@ -115,14 +115,24 @@ def import_card_template(request):
         
         # Validate the schema structure
         if not validate_card_schema(imported_schema):
-            return JsonResponse({'error': 'Invalid schema structure'}, status=400)
+            return JsonResponse({'error': 'Invalid schema structure. Expected either an array of components or an object with "cards" array.'}, status=400)
+        
+        # Extract template data and global vars
+        if isinstance(imported_schema, dict) and 'cards' in imported_schema:
+            # It's a complete template object
+            template_data = imported_schema['cards']
+            global_vars = imported_schema.get('vars', {})
+        else:
+            # It's directly an array of components
+            template_data = imported_schema
+            global_vars = {}
         
         # Create template with imported schema
         new_template = card_template.objects.create(
             name=name,
             organisation=org,
-            template_data=imported_schema,
-            global_vars={}
+            template_data=template_data,
+            global_vars=global_vars
         )
         
         return JsonResponse({
@@ -138,24 +148,46 @@ def import_card_template(request):
 
 def validate_card_schema(data):
     """Validate the card template schema structure"""
-    # Card template should be an array of components
-    if not isinstance(data, list):
-        return False
-    
-    # Validate each component in the template
-    for component in data:
-        if not isinstance(component, dict):
+    # Check if it's a complete template object with cards array
+    if isinstance(data, dict) and 'cards' in data:
+        # It's a complete template object, validate the cards array
+        cards = data['cards']
+        if not isinstance(cards, list):
             return False
         
-        # Each component must have a tag
-        if 'tag' not in component:
-            return False
+        # Validate each component in the cards array
+        for component in cards:
+            if not isinstance(component, dict):
+                return False
+            
+            # Each component must have a tag
+            if 'tag' not in component:
+                return False
+            
+            # Validate component structure recursively
+            if not validate_component(component):
+                return False
         
-        # Validate component structure recursively
-        if not validate_component(component):
-            return False
+        return True
     
-    return True
+    # Check if it's directly an array of components
+    elif isinstance(data, list):
+        # Validate each component in the template
+        for component in data:
+            if not isinstance(component, dict):
+                return False
+            
+            # Each component must have a tag
+            if 'tag' not in component:
+                return False
+            
+            # Validate component structure recursively
+            if not validate_component(component):
+                return False
+        
+        return True
+    
+    return False
 
 def validate_component(component):
     """Validate a single component structure"""
@@ -177,12 +209,11 @@ def validate_component(component):
     if tag not in html_tags + interactive_tags:
         return False
     
-    # If it's an interactive component, validate required fields
+    # If it's an interactive component, validate type field if present
     if tag in interactive_tags:
-        if 'type' not in component:
-            return False
-        if component['type'] not in ['Editable', 'display']:
-            return False
+        if 'type' in component:
+            if component['type'] not in ['Editable', 'display']:
+                return False
     
     # If it has children, validate them recursively
     if 'children' in component:

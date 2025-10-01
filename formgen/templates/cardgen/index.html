@@ -314,22 +314,37 @@ function validateCardJsonData() {
         // Basic schema validation for cards
         const errors = [];
         
-        if (!parsed.cards || !Array.isArray(parsed.cards)) {
-            errors.push('Missing or invalid "cards" array');
-        }
-        
-        if (parsed.cards && parsed.cards.length > 0) {
-            parsed.cards.forEach((card, index) => {
-                if (!card.id && card.id !== 0) {
-                    errors.push(`Card ${index}: Missing "id" field`);
+        // Check if it's a complete template object or just an array
+        if (typeof parsed === 'object' && parsed !== null) {
+            if (Array.isArray(parsed)) {
+                // It's directly an array of components
+                if (parsed.length === 0) {
+                    errors.push('Component array cannot be empty');
+                } else {
+                    parsed.forEach((component, index) => {
+                        if (!component.tag) {
+                            errors.push(`Component ${index}: Missing "tag" field`);
+                        }
+                    });
                 }
-                if (!card.title) {
-                    errors.push(`Card ${index}: Missing "title" field`);
+            } else if (parsed.cards) {
+                // It's a complete template object
+                if (!Array.isArray(parsed.cards)) {
+                    errors.push('Missing or invalid "cards" array');
+                } else if (parsed.cards.length === 0) {
+                    errors.push('Cards array cannot be empty');
+                } else {
+                    parsed.cards.forEach((component, index) => {
+                        if (!component.tag) {
+                            errors.push(`Component ${index}: Missing "tag" field`);
+                        }
+                    });
                 }
-                if (!card.type || card.type !== 'card') {
-                    errors.push(`Card ${index}: Missing or invalid "type" field (should be "card")`);
-                }
-            });
+            } else {
+                errors.push('Invalid structure: Expected either an array of components or an object with "cards" array');
+            }
+        } else {
+            errors.push('Invalid JSON: Must be an object or array');
         }
         
         if (errors.length > 0) {
@@ -394,8 +409,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validate JSON if checkbox is checked
             if (validateJson) {
-                if (!parsed.cards || !Array.isArray(parsed.cards)) {
-                    alert('Invalid JSON: Missing or invalid "cards" array');
+                if (Array.isArray(parsed)) {
+                    // It's directly an array of components - this is valid
+                    if (parsed.length === 0) {
+                        alert('Invalid JSON: Component array cannot be empty');
+                        return;
+                    }
+                } else if (parsed.cards && Array.isArray(parsed.cards)) {
+                    // It's a complete template object - this is valid
+                    if (parsed.cards.length === 0) {
+                        alert('Invalid JSON: Cards array cannot be empty');
+                        return;
+                    }
+                } else {
+                    alert('Invalid JSON: Expected either an array of components or an object with "cards" array');
                     return;
                 }
             }

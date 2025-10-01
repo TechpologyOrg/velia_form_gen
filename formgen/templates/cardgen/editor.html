@@ -269,6 +269,7 @@ const componentDefaults = {
 document.addEventListener('DOMContentLoaded', function() {
     initializeVisualEditor();
     setupDragAndDrop();
+    setupComponentDragAndDrop();
     setupResizing();
     renderComponentTree();
     updateLivePreview();
@@ -460,10 +461,27 @@ function renderComponentNode(component, level = 0) {
     const isInteractive = component.tag.startsWith('I');
     
     let html = `
-        <div class="component-node border border-gray-200 rounded p-3 mb-2 ${selectedComponent === component.id ? 'bg-blue-50 border-blue-300' : 'bg-white hover:bg-gray-50'}" 
-             data-component-id="${component.id}" style="margin-left: ${level * 16}px;">
+        <div class="component-node border border-gray-200 rounded p-3 mb-2 ${selectedComponent === component.id ? 'bg-blue-50 border-blue-300' : 'bg-white hover:bg-gray-50'} draggable-component" 
+             data-component-id="${component.id}" 
+             draggable="true"
+             style="margin-left: ${level * 16}px;">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2 flex-1 min-w-0">
+                    <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 p-1" 
+                         onmousedown="event.stopPropagation()" 
+                         title="Drag to reorder">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                            <circle cx="2" cy="2" r="1"/>
+                            <circle cx="6" cy="2" r="1"/>
+                            <circle cx="10" cy="2" r="1"/>
+                            <circle cx="2" cy="6" r="1"/>
+                            <circle cx="6" cy="6" r="1"/>
+                            <circle cx="10" cy="6" r="1"/>
+                            <circle cx="2" cy="10" r="1"/>
+                            <circle cx="6" cy="10" r="1"/>
+                            <circle cx="10" cy="10" r="1"/>
+                        </svg>
+                    </div>
                     <span class="text-sm font-medium text-gray-900">${getComponentIcon(component.tag)} ${component.tag}</span>
                     ${component.title ? `<span class="text-xs text-gray-500 truncate">"${component.title}"</span>` : ''}
                 </div>
@@ -865,6 +883,102 @@ function formatJson() {
     }
 }
 
+// Component drag and drop functionality
+function setupComponentDragAndDrop() {
+    const componentTree = document.getElementById('componentTree');
+    
+    // Make components draggable
+    componentTree.addEventListener('dragstart', function(e) {
+        if (e.target.classList.contains('draggable-component')) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.componentId);
+            e.target.style.opacity = '0.5';
+            e.target.classList.add('dragging');
+        }
+    });
+    
+    componentTree.addEventListener('dragend', function(e) {
+        if (e.target.classList.contains('draggable-component')) {
+            e.target.style.opacity = '1';
+            e.target.classList.remove('dragging');
+        }
+    });
+    
+    componentTree.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(componentTree, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        if (afterElement == null) {
+            componentTree.appendChild(dragging);
+        } else {
+            componentTree.insertBefore(dragging, afterElement);
+        }
+    });
+    
+    componentTree.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const componentId = e.dataTransfer.getData('text/plain');
+        const afterElement = getDragAfterElement(componentTree, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        
+        if (afterElement == null) {
+            componentTree.appendChild(dragging);
+        } else {
+            componentTree.insertBefore(dragging, afterElement);
+        }
+        
+        // Reorder components in data
+        reorderComponents(componentId, afterElement);
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable-component:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function reorderComponents(componentId, afterElement) {
+    // Find the component in templateData
+    const fromIndex = templateData.findIndex(comp => comp.id === componentId);
+    if (fromIndex === -1) return;
+    
+    const draggedComponent = templateData[fromIndex];
+    
+    // Remove from original position
+    templateData.splice(fromIndex, 1);
+    
+    // Find new position
+    let newIndex = templateData.length; // Default to end
+    if (afterElement) {
+        const afterComponentId = afterElement.dataset.componentId;
+        newIndex = templateData.findIndex(comp => comp.id === afterComponentId);
+    }
+    
+    // Insert at new position
+    templateData.splice(newIndex, 0, draggedComponent);
+    
+    // Update selected component if needed
+    if (selectedComponent === componentId) {
+        // Component stays selected
+    }
+    
+    // Re-render and update
+    renderComponentTree();
+    updateLivePreview();
+    
+    // Auto-save after reordering
+    autoSave();
+}
+
 async function saveTemplate() {
     try {
         // Get current template data
@@ -889,6 +1003,30 @@ async function saveTemplate() {
         }
     } catch (error) {
         alert('Error saving template: ' + error.message);
+    }
+}
+
+// Auto-save function for drag and drop operations
+async function autoSave() {
+    try {
+        const response = await fetch(`/cardgen/save/{{ template.id }}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(templateData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Auto-saved template after reordering');
+        } else {
+            console.error('Auto-save failed:', result.error);
+        }
+    } catch (error) {
+        console.error('Auto-save error:', error);
     }
 }
 </script>
@@ -964,6 +1102,80 @@ async function saveTemplate() {
 #componentPalette:not(.hidden) {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* Drag and Drop Styles for Card Components */
+.draggable-component {
+    transition: all 0.2s ease;
+}
+
+.draggable-component:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.draggable-component.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    z-index: 1000;
+}
+
+.draggable-component .drag-handle {
+    transition: color 0.2s ease;
+}
+
+.draggable-component .drag-handle:hover {
+    color: #6b7280 !important;
+}
+
+.draggable-component .drag-handle svg {
+    transition: all 0.2s ease;
+}
+
+.draggable-component .drag-handle:hover svg {
+    transform: scale(1.1);
+}
+
+/* Visual feedback for drag operations */
+.dragging {
+    cursor: grabbing !important;
+}
+
+.draggable-component:not(.dragging) {
+    cursor: grab;
+}
+
+/* Component styling improvements */
+.draggable-component {
+    border-left: 3px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.draggable-component:hover {
+    border-left-color: #8b5cf6;
+}
+
+/* Selection state improvements */
+.draggable-component.bg-blue-50 {
+    border-left-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+/* Smooth animations for reordering */
+#componentTree {
+    transition: all 0.3s ease;
+}
+
+/* Responsive drag handle */
+@media (max-width: 768px) {
+    .draggable-component .drag-handle {
+        padding: 0.25rem;
+    }
+    
+    .draggable-component .drag-handle svg {
+        width: 10px;
+        height: 10px;
+    }
 }
 </style>
 {% endblock %}
