@@ -32,36 +32,104 @@
     <div class="h-screen flex flex-col">
         <!-- Visual Editor -->
         <div id="visualEditor" class="flex-1 flex overflow-hidden">
-            <!-- Component Tree (Left Panel) -->
+            <!-- Component Tree & AI Chat (Left Panel) -->
             <div class="w-80 bg-white border-r border-gray-200 flex flex-col min-w-0">
-                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900">Component Tree</h2>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="toggleTreeView()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded" title="Toggle tree view">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
+                <!-- Tab Navigation -->
+                <div class="border-b border-gray-200">
+                    <nav class="flex space-x-8 px-4" aria-label="Tabs">
+                        <button onclick="switchTab('component-tree')" 
+                                id="tab-component-tree" 
+                                class="tab-button py-4 px-1 border-b-2 font-medium text-sm transition-colors border-blue-500 text-blue-600">
+                            Component Tree
                         </button>
-                        <button onclick="toggleComponentPalette()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded" title="Add components">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                        <button onclick="switchTab('ai-chat')" 
+                                id="tab-ai-chat" 
+                                class="tab-button py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            AI Chat
                         </button>
-                    </div>
+                    </nav>
                 </div>
-                <div class="flex-1 overflow-hidden flex flex-col">
-                    <!-- Tree Controls -->
-                    <div class="p-2 border-b border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-600">
-                        <span id="treeStats">0 components</span>
+
+                <!-- Component Tree Tab Content -->
+                <div id="tab-content-component-tree" class="flex-1 overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900">Component Tree</h2>
                         <div class="flex items-center space-x-2">
-                            <button onclick="expandAllComponents()" class="text-blue-600 hover:text-blue-800">Expand All</button>
-                            <button onclick="collapseAllComponents()" class="text-blue-600 hover:text-blue-800">Collapse All</button>
+                            <button onclick="toggleTreeView()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded" title="Toggle tree view">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                </svg>
+                            </button>
+                            <button onclick="toggleComponentPalette()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded" title="Add components">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </button>
                         </div>
                     </div>
-                    <!-- Tree Container with horizontal scroll -->
-                    <div class="flex-1 overflow-auto" id="treeContainer">
-                        <div id="componentTree" class="min-w-max p-4">
-                            <!-- Tree will be populated here -->
+                    <div class="flex-1 overflow-hidden flex flex-col">
+                        <!-- Tree Controls -->
+                        <div class="p-2 border-b border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-600">
+                            <span id="treeStats">0 components</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="expandAllComponents()" class="text-blue-600 hover:text-blue-800">Expand All</button>
+                                <button onclick="collapseAllComponents()" class="text-blue-600 hover:text-blue-800">Collapse All</button>
+                            </div>
+                        </div>
+                        <!-- Tree Container with horizontal scroll -->
+                        <div class="flex-1 overflow-auto" id="treeContainer">
+                            <div id="componentTree" class="min-w-max p-4">
+                                <!-- Tree will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Chat Tab Content -->
+                <div id="tab-content-ai-chat" class="flex-1 overflow-hidden flex flex-col hidden">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">AI Assistant</h2>
+                        <p class="text-sm text-gray-600 mt-1">Chat with GPT to get help with your card template</p>
+                    </div>
+                    
+                    <!-- Chat Messages Area -->
+                    <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatMessages">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                                <p class="text-sm text-gray-700">Hello! I'm your AI assistant. I can help you with:</p>
+                                <ul class="text-xs text-gray-600 mt-2 space-y-1">
+                                    <li>• Component structure suggestions</li>
+                                    <li>• CSS styling help</li>
+                                    <li>• Template optimization</li>
+                                    <li>• Code generation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Input Area -->
+                    <div class="border-t border-gray-200 p-4">
+                        <div class="flex space-x-2">
+                            <input type="text" 
+                                   id="chatInput" 
+                                   placeholder="Ask me anything about your template..."
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                   onkeypress="handleChatKeyPress(event)">
+                            <button onclick="sendChatMessage()" 
+                                    id="sendChatButton"
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500">
+                            Press Enter to send, or click the send button
                         </div>
                     </div>
                 </div>
@@ -1204,6 +1272,167 @@ async function autoSave() {
         console.error('Auto-save error:', error);
     }
 }
+
+// Tab switching functionality
+function switchTab(tabName) {
+    // Remove active classes from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('border-blue-500', 'text-blue-600');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Hide all tab contents
+    document.querySelectorAll('[id^="tab-content-"]').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Show selected tab and mark as active
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    const activeContent = document.getElementById(`tab-content-${tabName}`);
+    
+    if (activeTab && activeContent) {
+        activeTab.classList.remove('border-transparent', 'text-gray-500');
+        activeTab.classList.add('border-blue-500', 'text-blue-600');
+        activeContent.classList.remove('hidden');
+    }
+}
+
+// AI Chat functionality
+function handleChatKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendChatMessage();
+    }
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Clear input
+    input.value = '';
+    
+    // Add user message to chat
+    addMessageToChat(message, 'user');
+    
+    // Disable send button while processing
+    const sendButton = document.getElementById('sendChatButton');
+    sendButton.disabled = true;
+    sendButton.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    `;
+    
+    // Process the message and get GPT response
+    processUserMessage(message);
+}
+
+function addMessageToChat(message, sender) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    
+    if (sender === 'user') {
+        messageDiv.className = 'flex items-start space-x-3 justify-end';
+        messageDiv.innerHTML = `
+            <div class="bg-blue-500 text-white rounded-lg p-3 max-w-xs">
+                <p class="text-sm">${escapeHtml(message)}</p>
+            </div>
+            <div class="flex-shrink-0 w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </div>
+        `;
+    } else {
+        messageDiv.className = 'flex items-start space-x-3';
+        messageDiv.innerHTML = `
+            <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                <p class="text-sm text-gray-700">${escapeHtml(message)}</p>
+            </div>
+        `;
+    }
+    
+    chatMessages.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// PLACEHOLDER FUNCTIONS - Replace these with your actual GPT integration
+function processUserMessage(message) {
+    // TODO: Replace this with your actual GPT API call
+    console.log('Processing user message:', message);
+    console.log('Current template data:', templateData);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+        // TODO: Replace this mock response with actual GPT response
+        const mockResponse = generateMockGPTResponse(message);
+        handleGPTResponse(mockResponse);
+    }, 1500);
+}
+
+function generateMockGPTResponse(userMessage) {
+    // TODO: Replace this with actual GPT API integration
+    // This is just a mock response for demonstration
+    
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('help') || lowerMessage.includes('how')) {
+        return "I'd be happy to help! I can assist you with component structure, styling suggestions, and template optimization. What specific aspect of your template would you like help with?";
+    } else if (lowerMessage.includes('component') || lowerMessage.includes('add')) {
+        return "To add components, you can use the component palette (click the ? icon) or drag components from the palette into your component tree. You can also use the properties panel to add child components to existing containers.";
+    } else if (lowerMessage.includes('style') || lowerMessage.includes('css')) {
+        return "For styling, you can add CSS classes to components using the properties panel. Try classes like 'bg-blue-500', 'text-white', 'p-4', 'rounded-lg' for common styling needs.";
+    } else if (lowerMessage.includes('template') || lowerMessage.includes('structure')) {
+        return `Your current template has ${templateData.length} root components. Consider organizing related components in container divs for better structure and maintainability.`;
+    } else {
+        return "I understand you're asking about: '" + userMessage + "'. I'm here to help with your card template design. Could you be more specific about what you'd like assistance with?";
+    }
+}
+
+function handleGPTResponse(response) {
+    // TODO: Add your logic here to process the GPT response
+    // This could include:
+    // - Adding the response to the chat
+    // - Extracting actionable suggestions
+    // - Updating the template based on AI suggestions
+    // - Showing code examples or modifications
+    
+    console.log('GPT Response received:', response);
+    
+    // Add AI response to chat
+    addMessageToChat(response, 'ai');
+    
+    // Re-enable send button
+    const sendButton = document.getElementById('sendChatButton');
+    sendButton.disabled = false;
+    sendButton.innerHTML = `
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+        </svg>
+    `;
+    
+    // TODO: Add any additional processing of the GPT response here
+    // For example:
+    // - Parse suggestions and offer to apply them
+    // - Show code examples in a formatted way
+    // - Update template based on AI recommendations
+}
 </script>
 
 <style>
@@ -1478,6 +1707,95 @@ async function autoSave() {
 .tree-toggle-btn:hover {
     background-color: #f3f4f6;
     transform: scale(1.05);
+}
+
+/* Tab styles */
+.tab-button {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.tab-button:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.tab-button:focus {
+    outline: none;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Chat message animations */
+#chatMessages {
+    scroll-behavior: smooth;
+}
+
+.chat-message {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Chat input focus styles */
+#chatInput:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Send button loading animation */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Chat scrollbar styling */
+#chatMessages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chatMessages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#chatMessages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#chatMessages::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Message bubble styles */
+.message-bubble {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* AI message styling */
+.ai-message {
+    border-left: 3px solid #3b82f6;
+}
+
+/* User message styling */
+.user-message {
+    border-right: 3px solid #3b82f6;
 }
 </style>
 {% endblock %}
