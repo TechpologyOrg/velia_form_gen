@@ -1372,51 +1372,83 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// PLACEHOLDER FUNCTIONS - Replace these with your actual GPT integration
-function processUserMessage(message) {
-    // TODO: Replace this with your actual GPT API call
+// AI Chat API Integration
+async function processUserMessage(message) {
     console.log('Processing user message:', message);
     console.log('Current template data:', templateData);
     
-    // Simulate API call delay
-    setTimeout(() => {
-        // TODO: Replace this mock response with actual GPT response
-        const mockResponse = generateMockGPTResponse(message);
-        handleGPTResponse(mockResponse);
-    }, 1500);
-}
-
-function generateMockGPTResponse(userMessage) {
-    // TODO: Replace this with actual GPT API integration
-    // This is just a mock response for demonstration
-    
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('help') || lowerMessage.includes('how')) {
-        return "I'd be happy to help! I can assist you with component structure, styling suggestions, and template optimization. What specific aspect of your template would you like help with?";
-    } else if (lowerMessage.includes('component') || lowerMessage.includes('add')) {
-        return "To add components, you can use the component palette (click the ? icon) or drag components from the palette into your component tree. You can also use the properties panel to add child components to existing containers.";
-    } else if (lowerMessage.includes('style') || lowerMessage.includes('css')) {
-        return "For styling, you can add CSS classes to components using the properties panel. Try classes like 'bg-blue-500', 'text-white', 'p-4', 'rounded-lg' for common styling needs.";
-    } else if (lowerMessage.includes('template') || lowerMessage.includes('structure')) {
-        return `Your current template has ${templateData.length} root components. Consider organizing related components in container divs for better structure and maintainability.`;
-    } else {
-        return "I understand you're asking about: '" + userMessage + "'. I'm here to help with your card template design. Could you be more specific about what you'd like assistance with?";
+    try {
+        const response = await fetch(`/cardgen/ai-chat/{{ template.id }}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                message: message
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            handleGPTResponse(result.response);
+        } else {
+            handleGPTResponse(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Error calling AI chat API:', error);
+        handleGPTResponse('Sorry, I encountered an error while processing your request. Please try again.');
     }
 }
 
+
 function handleGPTResponse(response) {
-    // TODO: Add your logic here to process the GPT response
-    // This could include:
-    // - Adding the response to the chat
-    // - Extracting actionable suggestions
-    // - Updating the template based on AI suggestions
-    // - Showing code examples or modifications
-    
     console.log('GPT Response received:', response);
     
-    // Add AI response to chat
-    addMessageToChat(response, 'ai');
+    // Check if response starts with "@CODE"
+    if (response.trim().startsWith('@CODE')) {
+        // Extract JSON after @CODE line
+        const lines = response.trim().split('\n');
+        const codeLineIndex = lines.findIndex(line => line.trim() === '@CODE');
+        
+        if (codeLineIndex !== -1 && codeLineIndex + 1 < lines.length) {
+            // Get all lines after @CODE
+            const jsonLines = lines.slice(codeLineIndex + 1);
+            const jsonString = jsonLines.join('\n').trim();
+            
+            try {
+                // Parse the JSON to validate it
+                const jsonData = JSON.parse(jsonString);
+                
+                // Wrap in array and update template
+                templateData = Array.isArray(jsonData) ? jsonData : [jsonData];
+                
+                // Re-render the component tree and preview
+                renderComponentTree();
+                updateLivePreview();
+                
+                // Auto-save the changes
+                autoSave();
+                
+                // Respond with "Done." in chat
+                addMessageToChat("Done.", 'ai');
+                
+                console.log('Template updated with AI-generated code');
+                
+            } catch (error) {
+                console.error('Invalid JSON from AI:', error);
+                // If JSON is invalid, show the full response
+                addMessageToChat(response, 'ai');
+            }
+        } else {
+            // If @CODE but no JSON found, show full response
+            addMessageToChat(response, 'ai');
+        }
+    } else {
+        // Regular response - show the full response
+        addMessageToChat(response, 'ai');
+    }
     
     // Re-enable send button
     const sendButton = document.getElementById('sendChatButton');
@@ -1426,12 +1458,6 @@ function handleGPTResponse(response) {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
         </svg>
     `;
-    
-    // TODO: Add any additional processing of the GPT response here
-    // For example:
-    // - Parse suggestions and offer to apply them
-    // - Show code examples in a formatted way
-    // - Update template based on AI recommendations
 }
 </script>
 

@@ -10,4 +10,5 @@ urlpatterns = [
     path('import/', views.import_card_template, name='import_card_template'),
     path('delete/<int:template_id>/', views.delete_card_template, name='delete_card_template'),
     path('generate/<int:template_id>/', views.generate_card, name='generate_card'),
+    path('ai-chat/<int:template_id>/', views.ai_chat, name='ai_chat'),
 ]

@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import card_template, generated_card
 from core.models import organisation
+from .services import get_ai_assistant_response
 
 def index(request):
     """Card dashboard index page"""
@@ -265,6 +266,39 @@ def generate_card(request, template_id):
             'success': True,
             'card_id': new_card.id,
             'message': 'Card generated successfully'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_POST
+def ai_chat(request, template_id):
+    """Handle AI chat requests for card template assistance"""
+    try:
+        template_obj = get_object_or_404(card_template, id=template_id)
+        data = json.loads(request.body)
+        user_message = data.get('message')
+        
+        if not user_message:
+            return JsonResponse({'error': 'Missing message'}, status=400)
+        
+        # Get current template data and context
+        template_data = template_obj.template_data
+        global_vars = template_obj.global_vars
+        
+        # Get AI response using the published prompt
+        ai_response = get_ai_assistant_response(
+            user_message=user_message,
+            template_data=template_data,
+            global_vars=global_vars,
+            selected_component=None  # You can pass selected component if needed
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'response': ai_response
         })
         
     except json.JSONDecodeError:
