@@ -886,13 +886,35 @@ function formatJson() {
 // Component drag and drop functionality
 function setupComponentDragAndDrop() {
     const componentTree = document.getElementById('componentTree');
+    let draggedElement = null;
+    let dropIndicator = null;
+    
+    // Create drop indicator element
+    function createDropIndicator() {
+        const indicator = document.createElement('div');
+        indicator.className = 'drop-indicator';
+        indicator.style.cssText = `
+            height: 2px;
+            background: #3b82f6;
+            margin: 4px 0;
+            border-radius: 1px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        `;
+        return indicator;
+    }
     
     // Make components draggable
     componentTree.addEventListener('dragstart', function(e) {
         if (e.target.classList.contains('draggable-component')) {
+            draggedElement = e.target;
             e.dataTransfer.setData('text/plain', e.target.dataset.componentId);
             e.target.style.opacity = '0.5';
             e.target.classList.add('dragging');
+            
+            // Create drop indicator
+            dropIndicator = createDropIndicator();
+            componentTree.appendChild(dropIndicator);
         }
     });
     
@@ -900,31 +922,74 @@ function setupComponentDragAndDrop() {
         if (e.target.classList.contains('draggable-component')) {
             e.target.style.opacity = '1';
             e.target.classList.remove('dragging');
+            
+            // Remove drop indicator
+            if (dropIndicator) {
+                dropIndicator.remove();
+                dropIndicator = null;
+            }
+            
+            // Remove all drag-over classes
+            componentTree.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            
+            draggedElement = null;
         }
     });
     
     componentTree.addEventListener('dragover', function(e) {
         e.preventDefault();
+        
+        if (!draggedElement || !dropIndicator) return;
+        
         const afterElement = getDragAfterElement(componentTree, e.clientY);
-        const dragging = document.querySelector('.dragging');
-        if (afterElement == null) {
-            componentTree.appendChild(dragging);
+        
+        // Remove all drag-over classes
+        componentTree.querySelectorAll('.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+        
+        // Add drag-over class to the target element
+        if (afterElement) {
+            afterElement.classList.add('drag-over');
+        }
+        
+        // Position the drop indicator
+        if (afterElement) {
+            componentTree.insertBefore(dropIndicator, afterElement);
         } else {
-            componentTree.insertBefore(dragging, afterElement);
+            componentTree.appendChild(dropIndicator);
+        }
+        
+        // Show the indicator
+        dropIndicator.style.opacity = '1';
+    });
+    
+    componentTree.addEventListener('dragleave', function(e) {
+        // Only remove drag-over if we're leaving the entire container
+        if (!componentTree.contains(e.relatedTarget)) {
+            componentTree.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            if (dropIndicator) {
+                dropIndicator.style.opacity = '0';
+            }
         }
     });
     
     componentTree.addEventListener('drop', function(e) {
         e.preventDefault();
+        
+        if (!draggedElement) return;
+        
         const componentId = e.dataTransfer.getData('text/plain');
         const afterElement = getDragAfterElement(componentTree, e.clientY);
-        const dragging = document.querySelector('.dragging');
         
-        if (afterElement == null) {
-            componentTree.appendChild(dragging);
-        } else {
-            componentTree.insertBefore(dragging, afterElement);
-        }
+        // Remove all drag-over classes
+        componentTree.querySelectorAll('.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
         
         // Reorder components in data
         reorderComponents(componentId, afterElement);
@@ -933,6 +998,8 @@ function setupComponentDragAndDrop() {
 
 function getDragAfterElement(container, y) {
     const draggableElements = [...container.querySelectorAll('.draggable-component:not(.dragging)')];
+    
+    if (draggableElements.length === 0) return null;
     
     return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
@@ -1143,6 +1210,25 @@ async function autoSave() {
 
 .draggable-component:not(.dragging) {
     cursor: grab;
+}
+
+/* Drop zone indicators */
+.draggable-component.drag-over {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+/* Drop indicator line */
+.drop-indicator {
+    height: 2px;
+    background: #3b82f6;
+    margin: 4px 0;
+    border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
 }
 
 /* Component styling improvements */
