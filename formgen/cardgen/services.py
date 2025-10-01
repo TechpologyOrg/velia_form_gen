@@ -6,8 +6,19 @@ import logging
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Initialize OpenAI client
-client = OpenAI()
+# Initialize OpenAI client with error handling
+try:
+    if settings.OPENAI_API_KEY:
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        OPENAI_AVAILABLE = True
+    else:
+        client = None
+        OPENAI_AVAILABLE = False
+        logger.warning("OPENAI_API_KEY not set. AI features will be disabled.")
+except Exception as e:
+    client = None
+    OPENAI_AVAILABLE = False
+    logger.error(f"Failed to initialize OpenAI client: {e}")
 
 def get_ai_assistant_response(user_message, template_data=None, global_vars=None, selected_component=None):
     """
@@ -22,6 +33,10 @@ def get_ai_assistant_response(user_message, template_data=None, global_vars=None
     Returns:
         str: Assistant's response
     """
+    # Check if OpenAI is available
+    if not OPENAI_AVAILABLE or not client:
+        return "AI assistant is currently unavailable. Please check your OpenAI API key configuration."
+    
     try:
         # Prepare context information
         context_info = ""
@@ -68,6 +83,10 @@ def estimate_project_time(problem_description, worker_types, stage):
     """
     Estimate project time using the published prompt
     """
+    # Check if OpenAI is available
+    if not OPENAI_AVAILABLE or not client:
+        return {"error": "AI assistant is currently unavailable. Please check your OpenAI API key configuration."}
+    
     try:
         # Prepare the message with all parameters
         message_content = f"""
