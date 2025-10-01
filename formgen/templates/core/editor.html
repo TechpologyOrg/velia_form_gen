@@ -1738,12 +1738,14 @@ function initializeDragAndDrop() {
         if (e.target.classList.contains('draggable-section')) {
             e.dataTransfer.setData('text/plain', e.target.dataset.sectionIndex);
             e.target.style.opacity = '0.5';
+            e.target.classList.add('dragging');
         }
     });
     
     hierarchyTree.addEventListener('dragend', function(e) {
         if (e.target.classList.contains('draggable-section')) {
             e.target.style.opacity = '1';
+            e.target.classList.remove('dragging');
         }
     });
     
@@ -1848,15 +1850,20 @@ function reorderSections(fromIndex, afterElement) {
     const sections = currentSchema.answers;
     const draggedSection = sections[fromIndex];
     
-    // Remove from original position
-    sections.splice(fromIndex, 1);
-    
-    // Find new position
+    // Find new position before removing the section
     let newIndex = sections.length; // Default to end
     if (afterElement) {
         const afterIndex = parseInt(afterElement.dataset.sectionIndex);
-        newIndex = sections.findIndex(section => section.id === currentSchema.answers[afterIndex].id);
+        // Adjust the target index if we're moving from before to after
+        if (fromIndex < afterIndex) {
+            newIndex = afterIndex - 1; // -1 because we'll remove the dragged section first
+        } else {
+            newIndex = afterIndex;
+        }
     }
+    
+    // Remove from original position
+    sections.splice(fromIndex, 1);
     
     // Insert at new position
     sections.splice(newIndex, 0, draggedSection);
