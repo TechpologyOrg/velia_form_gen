@@ -10,6 +10,9 @@ class card_template(models.Model):
     # Global variables for the template
     global_vars = models.JSONField(default=dict, blank=True)
     
+    # OpenAI thread ID for AI chat continuity
+    openai_thread_id = models.CharField(max_length=255, blank=True, null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

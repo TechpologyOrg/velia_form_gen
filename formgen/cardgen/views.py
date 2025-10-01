@@ -59,7 +59,8 @@ def create_card_template(request):
             name=name,
             organisation=org,
             template_data=default_template_data,
-            global_vars={}
+            global_vars={},
+            openai_thread_id=None  # Will be created on first AI chat
         )
         
         return JsonResponse({
@@ -133,7 +134,8 @@ def import_card_template(request):
             name=name,
             organisation=org,
             template_data=template_data,
-            global_vars=global_vars
+            global_vars=global_vars,
+            openai_thread_id=None  # Will be created on first AI chat
         )
         
         return JsonResponse({
@@ -288,17 +290,23 @@ def ai_chat(request, template_id):
         template_data = template_obj.template_data
         global_vars = template_obj.global_vars
         
-        # Get AI response using the published prompt
-        ai_response = get_ai_assistant_response(
+        # Get AI response using the Assistant API
+        ai_result = get_ai_assistant_response(
             user_message=user_message,
             template_data=template_data,
             global_vars=global_vars,
-            selected_component=None  # You can pass selected component if needed
+            selected_component=None,  # You can pass selected component if needed
+            thread_id=template_obj.openai_thread_id
         )
+        
+        # Update the template with the new thread ID if we got one
+        if ai_result.get('thread_id') and ai_result['thread_id'] != template_obj.openai_thread_id:
+            template_obj.openai_thread_id = ai_result['thread_id']
+            template_obj.save()
         
         return JsonResponse({
             'success': True,
-            'response': ai_response
+            'response': ai_result['response']
         })
         
     except json.JSONDecodeError:
