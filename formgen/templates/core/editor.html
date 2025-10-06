@@ -235,6 +235,7 @@
                         <option value="choice">Choice</option>
                         <option value="boolean">Boolean</option>
                         <option value="date">Date</option>
+                        <option value="fileUpload">File Upload</option>
                         <option value="display">Display</option>
                         <option value="title">Title</option>
                         <option value="paragraph">Paragraph</option>
@@ -735,6 +736,17 @@ function addQuestion() {
         newQuestion.choices = [];
     }
     
+    // Add file upload specific fields for fileUpload type
+    if (newQuestion.type === 'fileUpload') {
+        newQuestion.description = '';
+        newQuestion.required = false;
+        newQuestion.validation = {
+            maxFiles: 5,
+            allowedTypes: ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.xlsx', '.csv']
+        };
+        newQuestion.value = [];
+    }
+    
     if (!currentSchema.answers[selectedSectionIndex].questions) {
         currentSchema.answers[selectedSectionIndex].questions = [];
     }
@@ -784,6 +796,32 @@ function editQuestion(sectionIndex, questionIndex) {
         const regexField = document.getElementById('questionRegex');
         if (regexField) {
             regexField.value = question.regex;
+        }
+    }
+    
+    // Handle file upload specific fields
+    if (question.description) {
+        const descriptionField = document.getElementById('questionDescription');
+        if (descriptionField) {
+            descriptionField.value = question.description;
+        }
+    }
+    if (question.validation && question.validation.maxFiles) {
+        const maxFilesField = document.getElementById('questionMaxFiles');
+        if (maxFilesField) {
+            maxFilesField.value = question.validation.maxFiles;
+        }
+    }
+    if (question.validation && question.validation.allowedTypes) {
+        const allowedTypesField = document.getElementById('questionAllowedTypes');
+        if (allowedTypesField) {
+            allowedTypesField.value = question.validation.allowedTypes.join('\n');
+        }
+    }
+    if (question.required !== undefined) {
+        const requiredField = document.getElementById('questionRequired');
+        if (requiredField) {
+            requiredField.checked = question.required;
         }
     }
     
@@ -859,6 +897,13 @@ function updateQuestionSpecificFields(type) {
                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                          placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
             </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
+                <input type="text" id="questionHint" name="hint"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Optional hint text to help users understand the question">
+                <p class="text-xs text-gray-500 mt-1">Optional: Additional guidance or help text for this question</p>
+            </div>
         `;
     }
     
@@ -869,6 +914,13 @@ function updateQuestionSpecificFields(type) {
                 <textarea id="questionChoices" name="choices" rows="4"
                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                          placeholder="JavaScript&#10;Python&#10;React&#10;Node.js"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
+                <input type="text" id="questionHint" name="hint"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Optional hint text to help users understand the question">
+                <p class="text-xs text-gray-500 mt-1">Optional: Additional guidance or help text for this question</p>
             </div>
         `;
     }
@@ -881,6 +933,13 @@ function updateQuestionSpecificFields(type) {
                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                          placeholder="Enter your paragraph content here...&#10;&#10;You can use line breaks to format your text.&#10;Perfect for instructions, descriptions, or any multi-line content."></textarea>
             </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
+                <input type="text" id="questionHint" name="hint"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Optional hint text to help users understand the question">
+                <p class="text-xs text-gray-500 mt-1">Optional: Additional guidance or help text for this question</p>
+            </div>
         `;
     }
     
@@ -892,6 +951,53 @@ function updateQuestionSpecificFields(type) {
                          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                          placeholder="## Instructions&#10;&#10;Please complete the following steps:&#10;&#10;1. **Fill in your personal information**&#10;2. *Verify your contact details*&#10;3. Submit the form&#10;&#10;&gt; **Note**: All fields marked with * are required.&#10;&#10;For more information, visit [our website](https://example.com)."></textarea>
                 <p class="text-xs text-gray-500 mt-1">Supports Markdown syntax with live highlighting</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
+                <input type="text" id="questionHint" name="hint"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Optional hint text to help users understand the question">
+                <p class="text-xs text-gray-500 mt-1">Optional: Additional guidance or help text for this question</p>
+            </div>
+        `;
+    }
+    
+    if (type === 'fileUpload') {
+        html = `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea id="questionDescription" name="description" rows="3"
+                         class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         placeholder="e.g., Ladda upp PDF, bilder eller andra dokument (max 10MB per fil)"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Description text shown to users about file upload requirements</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Maximum Files</label>
+                <input type="number" id="questionMaxFiles" name="maxFiles" min="1" max="20" value="5"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Maximum number of files users can upload (1-20)</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Allowed File Types</label>
+                <textarea id="questionAllowedTypes" name="allowedTypes" rows="3"
+                         class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                         placeholder=".pdf&#10;.doc&#10;.docx&#10;.jpg&#10;.jpeg&#10;.png&#10;.xlsx&#10;.csv"></textarea>
+                <p class="text-xs text-gray-500 mt-1">One file extension per line (e.g., .pdf, .jpg, .docx)</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Required</label>
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="questionRequired" name="required"
+                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <label for="questionRequired" class="text-sm text-gray-700">This field is required</label>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
+                <input type="text" id="questionHint" name="hint"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Optional hint text to help users understand the question">
+                <p class="text-xs text-gray-500 mt-1">Optional: Additional guidance or help text for this question</p>
             </div>
         `;
     }
@@ -927,6 +1033,26 @@ function updateQuestionSpecificFields(type) {
                 <input type="text" id="questionKey" name="key"
                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                        placeholder="e.g., welcome_text">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
+                <input type="text" id="questionHint" name="hint"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Optional hint text to help users understand the question">
+                <p class="text-xs text-gray-500 mt-1">Optional: Additional guidance or help text for this question</p>
+            </div>
+        `;
+    }
+    
+    // Add hint field for question types that don't have it yet
+    if (!['text', 'numeric', 'choice', 'toggleList', 'paragraph', 'markdown', 'fileUpload', 'display'].includes(type)) {
+        html += `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
+                <input type="text" id="questionHint" name="hint"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Optional hint text to help users understand the question">
+                <p class="text-xs text-gray-500 mt-1">Optional: Additional guidance or help text for this question</p>
             </div>
         `;
     }
@@ -1208,13 +1334,45 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         delete question.hint;
     }
     
-    // Handle choices array for choice and toggleList types
-    if (question.type === 'choice' || question.type === 'toggleList') {
-        const choicesText = formData.get('choices');
-        question.choices = choicesText ? choicesText.split('\n').filter(c => c.trim()) : [];
-    } else {
-        // Remove choices array for other types
+    // Handle file upload specific fields
+    if (question.type === 'fileUpload') {
+        // Set description
+        question.description = formData.get('description') || '';
+        
+        // Set required field
+        question.required = formData.get('required') === 'on';
+        
+        // Set validation object
+        const maxFiles = parseInt(formData.get('maxFiles')) || 5;
+        const allowedTypesText = formData.get('allowedTypes') || '';
+        const allowedTypes = allowedTypesText ? allowedTypesText.split('\n').filter(t => t.trim()) : [];
+        
+        question.validation = {
+            maxFiles: maxFiles,
+            allowedTypes: allowedTypes
+        };
+        
+        // Set default value as empty array
+        question.value = [];
+        
+        // Remove fields not used by file upload
         delete question.choices;
+        delete question.placeholder;
+        delete question.regex;
+    } else {
+        // Handle choices array for choice and toggleList types
+        if (question.type === 'choice' || question.type === 'toggleList') {
+            const choicesText = formData.get('choices');
+            question.choices = choicesText ? choicesText.split('\n').filter(c => c.trim()) : [];
+        } else {
+            // Remove choices array for other types
+            delete question.choices;
+        }
+        
+        // Remove file upload specific fields for other types
+        delete question.description;
+        delete question.validation;
+        delete question.required;
     }
     
     if (question.type === 'display') {
