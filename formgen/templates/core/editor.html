@@ -495,11 +495,18 @@ function createSectionElement(section, index) {
             </div>
             <div class="flex space-x-1 ml-2">
                 <button onclick="event.stopPropagation(); editSection(${index})" 
-                        class="text-blue-500 hover:text-blue-600 text-xs">
+                        class="text-blue-500 hover:text-blue-600 text-xs" 
+                        title="Edit section">
                     ✏️
                 </button>
+                <button onclick="event.stopPropagation(); duplicateSection(${index})" 
+                        class="text-green-500 hover:text-green-600 text-xs" 
+                        title="Duplicate section">
+                    📋
+                </button>
                 <button onclick="event.stopPropagation(); deleteSection(${index})" 
-                        class="text-red-500 hover:text-red-600 text-xs">
+                        class="text-red-500 hover:text-red-600 text-xs" 
+                        title="Delete section">
                     🗑️
                 </button>
             </div>
@@ -1095,6 +1102,37 @@ function updateQuestionSpecificFields(type) {
 function hideQuestionModal() {
     document.getElementById('questionModal').classList.add('hidden');
     document.getElementById('questionModal').classList.remove('flex');
+}
+
+function duplicateSection(index) {
+    // Get the section to duplicate
+    const originalSection = currentSchema.answers[index];
+    
+    // Create a deep copy of the section
+    const duplicatedSection = JSON.parse(JSON.stringify(originalSection));
+    
+    // Assign new unique ID to the section
+    duplicatedSection.id = nextSectionId++;
+    
+    // Update the title to indicate it's a copy
+    duplicatedSection.title = duplicatedSection.title + ' (Copy)';
+    
+    // Assign new unique IDs to all questions in the duplicated section
+    if (duplicatedSection.questions && duplicatedSection.questions.length > 0) {
+        duplicatedSection.questions.forEach(question => {
+            question.id = nextQuestionId++;
+        });
+    }
+    
+    // Insert the duplicated section right after the original
+    currentSchema.answers.splice(index + 1, 0, duplicatedSection);
+    
+    // Update the UI
+    renderHierarchy();
+    updateJSONPreview();
+    
+    // Select the newly duplicated section
+    selectSection(index + 1);
 }
 
 function deleteSection(index) {
