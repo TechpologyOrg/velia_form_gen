@@ -340,6 +340,21 @@
                 </div>
             </div>
             
+            <!-- Variable Manipulation (onCondition) -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Variable Actions (onCondition)</label>
+                <div class="text-xs text-gray-500 mb-2">Define actions that modify variables when conditions are met</div>
+                <div class="space-y-3">
+                    <div id="onConditionsList" class="space-y-3">
+                        <!-- Dynamic onCondition rules will be added here -->
+                    </div>
+                    <button type="button" onclick="addOnCondition()" 
+                            class="text-blue-500 hover:text-blue-600 text-sm">
+                        + Add Variable Action
+                    </button>
+                </div>
+            </div>
+            
             <div class="flex justify-end space-x-3">
                 <button type="button" onclick="hideQuestionModal()"
                         class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
@@ -881,6 +896,60 @@ function editQuestion(sectionIndex, questionIndex) {
         }
     } else {
         document.getElementById('questionVisibilityControls').classList.add('hidden');
+    }
+    
+    // Handle onCondition rules
+    const onConditionsList = document.getElementById('onConditionsList');
+    onConditionsList.innerHTML = '';
+    
+    if (question.onCondition && Array.isArray(question.onCondition)) {
+        question.onCondition.forEach(rule => {
+            addOnCondition();
+            const lastRule = onConditionsList.lastElementChild;
+            
+            // Set condition type
+            const conditionType = lastRule.querySelector('.onConditionType');
+            if (rule.condition.allOf) {
+                conditionType.value = 'allOf';
+            } else if (rule.condition.anyOf) {
+                conditionType.value = 'anyOf';
+            } else {
+                conditionType.value = 'simple';
+            }
+            updateOnConditionType(lastRule);
+            
+            // Set condition values based on type
+            if (rule.condition.allOf) {
+                const conditionsContainer = lastRule.querySelector('.onConditionAllOfList');
+                conditionsContainer.innerHTML = '';
+                rule.condition.allOf.forEach(cond => {
+                    addOnConditionCondition(lastRule);
+                    const lastCond = conditionsContainer.lastElementChild;
+                    lastCond.querySelector('.onConditionPath').value = cond.path || '';
+                    lastCond.querySelector('.onConditionOp').value = cond.op || 'equals';
+                    lastCond.querySelector('.onConditionValue').value = cond.value || '';
+                });
+            } else if (rule.condition.anyOf) {
+                const conditionsContainer = lastRule.querySelector('.onConditionAnyOfList');
+                conditionsContainer.innerHTML = '';
+                rule.condition.anyOf.forEach(cond => {
+                    addOnConditionAnyOfCondition(lastRule);
+                    const lastCond = conditionsContainer.lastElementChild;
+                    lastCond.querySelector('.onConditionAnyOfPath').value = cond.path || '';
+                    lastCond.querySelector('.onConditionAnyOfOp').value = cond.op || 'equals';
+                    lastCond.querySelector('.onConditionAnyOfValue').value = cond.value || '';
+                });
+            } else {
+                lastRule.querySelector('.onConditionSimplePath').value = rule.condition.path || '';
+                lastRule.querySelector('.onConditionSimpleOp').value = rule.condition.op || 'equals';
+                lastRule.querySelector('.onConditionSimpleValue').value = rule.condition.value || '';
+            }
+            
+            // Set action
+            lastRule.querySelector('.onConditionActionType').value = rule.action.type || 'set';
+            lastRule.querySelector('.onConditionVarName').value = rule.action.varName || '';
+            lastRule.querySelector('.onConditionActionValue').value = rule.action.value || '';
+        });
     }
     
     document.getElementById('questionModal').classList.remove('hidden');
@@ -1520,6 +1589,112 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         delete question.visibleWhen;
     }
     
+    // Handle onCondition rules
+    const onConditionRules = [];
+    const ruleElements = document.querySelectorAll('#onConditionsList > div');
+    
+    ruleElements.forEach(ruleElement => {
+        const conditionType = ruleElement.querySelector('.onConditionType').value;
+        const actionType = ruleElement.querySelector('.onConditionActionType').value;
+        const varName = ruleElement.querySelector('.onConditionVarName').value;
+        const actionValue = ruleElement.querySelector('.onConditionActionValue').value;
+        
+        if (!varName) return; // Skip if no variable name
+        
+        let condition = {};
+        
+        if (conditionType === 'allOf') {
+            const conditions = [];
+            const condElements = ruleElement.querySelectorAll('.onConditionAllOfList > div');
+            
+            condElements.forEach(condEl => {
+                const path = condEl.querySelector('.onConditionPath').value;
+                const op = condEl.querySelector('.onConditionOp').value;
+                const value = condEl.querySelector('.onConditionValue').value;
+                
+                const noValueOperators = ['isEmpty', 'isNotEmpty'];
+                
+                if (path && op) {
+                    if (noValueOperators.includes(op)) {
+                        conditions.push({ path, op, value: '' });
+                    } else if (value) {
+                        conditions.push({ path, op, value });
+                    }
+                }
+            });
+            
+            if (conditions.length > 0) {
+                condition = { allOf: conditions };
+            } else {
+                return; // Skip this rule if no valid conditions
+            }
+        } else if (conditionType === 'anyOf') {
+            const conditions = [];
+            const condElements = ruleElement.querySelectorAll('.onConditionAnyOfList > div');
+            
+            condElements.forEach(condEl => {
+                const path = condEl.querySelector('.onConditionAnyOfPath').value;
+                const op = condEl.querySelector('.onConditionAnyOfOp').value;
+                const value = condEl.querySelector('.onConditionAnyOfValue').value;
+                
+                const noValueOperators = ['isEmpty', 'isNotEmpty'];
+                
+                if (path && op) {
+                    if (noValueOperators.includes(op)) {
+                        conditions.push({ path, op, value: '' });
+                    } else if (value) {
+                        conditions.push({ path, op, value });
+                    }
+                }
+            });
+            
+            if (conditions.length > 0) {
+                condition = { anyOf: conditions };
+            } else {
+                return; // Skip this rule if no valid conditions
+            }
+        } else {
+            // Simple condition
+            const path = ruleElement.querySelector('.onConditionSimplePath').value;
+            const op = ruleElement.querySelector('.onConditionSimpleOp').value;
+            const value = ruleElement.querySelector('.onConditionSimpleValue').value;
+            
+            const noValueOperators = ['isEmpty', 'isNotEmpty'];
+            
+            if (path && op) {
+                if (noValueOperators.includes(op)) {
+                    condition = { path, op, value: '' };
+                } else if (value) {
+                    condition = { path, op, value };
+                } else {
+                    return; // Skip this rule if no value provided
+                }
+            } else {
+                return; // Skip this rule if missing path or op
+            }
+        }
+        
+        // Build the action object
+        const action = {
+            type: actionType,
+            varName: varName,
+            value: actionValue
+        };
+        
+        // Add the complete rule
+        onConditionRules.push({
+            condition: condition,
+            action: action
+        });
+    });
+    
+    // Save onCondition to question
+    if (onConditionRules.length > 0) {
+        question.onCondition = onConditionRules;
+    } else {
+        delete question.onCondition;
+    }
+    
     // Re-render the section editor
     renderSectionEditor(currentSchema.answers[sectionIndex], sectionIndex);
     updateJSONPreview();
@@ -1898,6 +2073,218 @@ function removeSectionAnyOfCondition(button) {
 
 function removeQuestionAnyOfCondition(button) {
     button.parentElement.parentElement.remove();
+}
+
+// onCondition (Variable Manipulation) Functions
+function addOnCondition() {
+    const container = document.getElementById('onConditionsList');
+    const ruleIndex = container.children.length;
+    
+    const ruleDiv = document.createElement('div');
+    ruleDiv.className = 'border border-blue-200 rounded p-4 bg-blue-50';
+    ruleDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+            <span class="text-sm font-semibold text-blue-800">Variable Action ${ruleIndex + 1}</span>
+            <button type="button" onclick="removeOnCondition(this)" 
+                    class="text-red-500 hover:text-red-600 text-sm">
+                🗑️ Remove
+            </button>
+        </div>
+        
+        <!-- Condition Section -->
+        <div class="mb-4 p-3 bg-white rounded border border-gray-200">
+            <label class="block text-xs font-semibold text-gray-700 mb-2">WHEN (Condition)</label>
+            
+            <div class="mb-2">
+                <select class="onConditionType w-full border border-gray-300 rounded px-2 py-1 text-sm" onchange="updateOnConditionType(this.closest('.border-blue-200'))">
+                    <option value="simple">Simple Condition</option>
+                    <option value="allOf">Multiple Conditions (AND)</option>
+                    <option value="anyOf">Multiple Conditions (OR)</option>
+                </select>
+            </div>
+            
+            <div class="onConditionSimple">
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Path</label>
+                        <input type="text" class="onConditionSimplePath w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., 4">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Operator</label>
+                        <select class="onConditionSimpleOp w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                            <option value="equals">equals</option>
+                            <option value="not_equals">not equals</option>
+                            <option value="contains">contains</option>
+                            <option value="not_contains">not contains</option>
+                            <option value="greater_than">greater than</option>
+                            <option value="less_than">less than</option>
+                            <option value="greaterThanOrEqual">≥</option>
+                            <option value="lessThanOrEqual">≤</option>
+                            <option value="isEmpty">is empty</option>
+                            <option value="isNotEmpty">is not empty</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Value</label>
+                        <input type="text" class="onConditionSimpleValue w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="value">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="onConditionAllOf hidden">
+                <div class="text-xs text-gray-600 mb-2">All conditions must be true (AND)</div>
+                <div class="onConditionAllOfList space-y-2"></div>
+                <button type="button" onclick="addOnConditionCondition(this.closest('.border-blue-200'))" 
+                        class="text-blue-500 hover:text-blue-600 text-xs mt-2">
+                    + Add Condition
+                </button>
+            </div>
+            
+            <div class="onConditionAnyOf hidden">
+                <div class="text-xs text-gray-600 mb-2">Any condition can be true (OR)</div>
+                <div class="onConditionAnyOfList space-y-2"></div>
+                <button type="button" onclick="addOnConditionAnyOfCondition(this.closest('.border-blue-200'))" 
+                        class="text-blue-500 hover:text-blue-600 text-xs mt-2">
+                    + Add Condition
+                </button>
+            </div>
+        </div>
+        
+        <!-- Action Section -->
+        <div class="p-3 bg-green-50 rounded border border-green-200">
+            <label class="block text-xs font-semibold text-gray-700 mb-2">THEN (Action)</label>
+            
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Action Type</label>
+                    <select class="onConditionActionType w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                        <option value="set">Set Value</option>
+                        <option value="append">Append to Array</option>
+                        <option value="increment">Increment Number</option>
+                        <option value="decrement">Decrement Number</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Variable Name</label>
+                    <input type="text" class="onConditionVarName w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., tags">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Value</label>
+                    <input type="text" class="onConditionActionValue w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="value">
+                </div>
+            </div>
+            <div class="text-xs text-gray-500 mt-2">
+                Variable will be created in the vars object if it doesn't exist.
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(ruleDiv);
+}
+
+function removeOnCondition(button) {
+    button.closest('.border-blue-200').remove();
+}
+
+function updateOnConditionType(ruleElement) {
+    const type = ruleElement.querySelector('.onConditionType').value;
+    const simpleDiv = ruleElement.querySelector('.onConditionSimple');
+    const allOfDiv = ruleElement.querySelector('.onConditionAllOf');
+    const anyOfDiv = ruleElement.querySelector('.onConditionAnyOf');
+    
+    simpleDiv.classList.add('hidden');
+    allOfDiv.classList.add('hidden');
+    anyOfDiv.classList.add('hidden');
+    
+    if (type === 'simple') {
+        simpleDiv.classList.remove('hidden');
+    } else if (type === 'allOf') {
+        allOfDiv.classList.remove('hidden');
+    } else if (type === 'anyOf') {
+        anyOfDiv.classList.remove('hidden');
+    }
+}
+
+function addOnConditionCondition(ruleElement) {
+    const container = ruleElement.querySelector('.onConditionAllOfList');
+    const condIndex = container.children.length;
+    
+    const condDiv = document.createElement('div');
+    condDiv.className = 'border border-gray-200 rounded p-2 bg-gray-50';
+    condDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-1">
+            <span class="text-xs font-medium text-gray-600">Condition ${condIndex + 1}</span>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                    class="text-red-500 hover:text-red-600 text-xs">
+                🗑️
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <input type="text" class="onConditionPath w-full border border-gray-300 rounded px-2 py-1 text-xs" placeholder="Path">
+            </div>
+            <div>
+                <select class="onConditionOp w-full border border-gray-300 rounded px-2 py-1 text-xs">
+                    <option value="equals">equals</option>
+                    <option value="not_equals">not equals</option>
+                    <option value="contains">contains</option>
+                    <option value="not_contains">not contains</option>
+                    <option value="greater_than">></option>
+                    <option value="less_than"><</option>
+                    <option value="greaterThanOrEqual">≥</option>
+                    <option value="lessThanOrEqual">≤</option>
+                    <option value="isEmpty">is empty</option>
+                    <option value="isNotEmpty">is not empty</option>
+                </select>
+            </div>
+            <div>
+                <input type="text" class="onConditionValue w-full border border-gray-300 rounded px-2 py-1 text-xs" placeholder="Value">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(condDiv);
+}
+
+function addOnConditionAnyOfCondition(ruleElement) {
+    const container = ruleElement.querySelector('.onConditionAnyOfList');
+    const condIndex = container.children.length;
+    
+    const condDiv = document.createElement('div');
+    condDiv.className = 'border border-gray-200 rounded p-2 bg-gray-50';
+    condDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-1">
+            <span class="text-xs font-medium text-gray-600">Condition ${condIndex + 1}</span>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                    class="text-red-500 hover:text-red-600 text-xs">
+                🗑️
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <input type="text" class="onConditionAnyOfPath w-full border border-gray-300 rounded px-2 py-1 text-xs" placeholder="Path">
+            </div>
+            <div>
+                <select class="onConditionAnyOfOp w-full border border-gray-300 rounded px-2 py-1 text-xs">
+                    <option value="equals">equals</option>
+                    <option value="not_equals">not equals</option>
+                    <option value="contains">contains</option>
+                    <option value="not_contains">not contains</option>
+                    <option value="greater_than">></option>
+                    <option value="less_than"><</option>
+                    <option value="greaterThanOrEqual">≥</option>
+                    <option value="lessThanOrEqual">≤</option>
+                    <option value="isEmpty">is empty</option>
+                    <option value="isNotEmpty">is not empty</option>
+                </select>
+            </div>
+            <div>
+                <input type="text" class="onConditionAnyOfValue w-full border border-gray-300 rounded px-2 py-1 text-xs" placeholder="Value">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(condDiv);
 }
 
 // Date operator handling functions

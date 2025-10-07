@@ -32,7 +32,33 @@
           "title": "Employment Status",
           "type": "choice",
           "value": "",
-          "choices": ["employed", "student", "unemployed", "retired"]
+          "choices": ["employed", "student", "unemployed", "retired"],
+          "onCondition": [
+            {
+              "condition": {
+                "path": "4",
+                "op": "equals",
+                "value": "employed"
+              },
+              "action": {
+                "type": "append",
+                "varName": "user_tags",
+                "value": "professional"
+              }
+            },
+            {
+              "condition": {
+                "path": "4",
+                "op": "equals",
+                "value": "student"
+              },
+              "action": {
+                "type": "append",
+                "varName": "user_tags",
+                "value": "education"
+              }
+            }
+          ]
         },
         {
           "id": 5,
@@ -51,7 +77,33 @@
           "title": "Skills",
           "type": "toggleList",
           "value": "",
-          "choices": ["JavaScript", "Python", "React", "Node.js", "Django", "Vue.js"]
+          "choices": ["JavaScript", "Python", "React", "Node.js", "Django", "Vue.js"],
+          "onCondition": [
+            {
+              "condition": {
+                "path": "6",
+                "op": "contains",
+                "value": "JavaScript"
+              },
+              "action": {
+                "type": "append",
+                "varName": "tech_stack",
+                "value": "frontend"
+              }
+            },
+            {
+              "condition": {
+                "path": "6",
+                "op": "contains",
+                "value": "Python"
+              },
+              "action": {
+                "type": "append",
+                "varName": "tech_stack",
+                "value": "backend"
+              }
+            }
+          ]
         },
         {
           "id": 7,
@@ -74,7 +126,54 @@
             "path": "7",
             "op": "equals",
             "value": true
-          }
+          },
+          "onCondition": [
+            {
+              "condition": {
+                "path": "8",
+                "op": "greater_than",
+                "value": "5"
+              },
+              "action": {
+                "type": "set",
+                "varName": "experience_level",
+                "value": "senior"
+              }
+            },
+            {
+              "condition": {
+                "path": "8",
+                "op": "lessThanOrEqual",
+                "value": "5"
+              },
+              "action": {
+                "type": "set",
+                "varName": "experience_level",
+                "value": "mid"
+              }
+            },
+            {
+              "condition": {
+                "allOf": [
+                  {
+                    "path": "8",
+                    "op": "greater_than",
+                    "value": "10"
+                  },
+                  {
+                    "path": "7",
+                    "op": "equals",
+                    "value": true
+                  }
+                ]
+              },
+              "action": {
+                "type": "append",
+                "varName": "user_tags",
+                "value": "expert"
+              }
+            }
+          ]
         },
         {
           "id": "title",
@@ -99,7 +198,10 @@
   ],
   "vars": {
     "welcome_text": "Welcome to our survey! Thank you for participating.",
-    "company_name": "Acme Corporation"
+    "company_name": "Acme Corporation",
+    "user_tags": [],
+    "tech_stack": [],
+    "experience_level": "junior"
   },
   "title": "Employee Survey Form",
   "description": "A comprehensive survey to collect employee information and preferences"
