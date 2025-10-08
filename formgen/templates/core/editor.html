@@ -854,7 +854,8 @@ function editQuestion(sectionIndex, questionIndex) {
     if (question.required !== undefined) {
         const requiredField = document.getElementById('questionRequired');
         if (requiredField) {
-            requiredField.checked = question.required;
+            // Handle both string and boolean values for backwards compatibility
+            requiredField.checked = question.required === 'true' || question.required === true;
         }
     }
     
@@ -1457,8 +1458,8 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         // Set description
         question.description = formData.get('description') || '';
         
-        // Set required field
-        question.required = formData.get('required') === 'on';
+        // Set required field as string
+        question.required = formData.get('required') === 'on' ? 'true' : 'false';
         
         // Set validation object
         const maxFiles = parseInt(formData.get('maxFiles')) || 5;
