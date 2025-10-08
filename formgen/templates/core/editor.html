@@ -502,6 +502,9 @@ function createSectionElement(section, index) {
                         <circle cx="10" cy="10" r="1"/>
                     </svg>
                 </div>
+                <div class="flex-shrink-0 bg-indigo-100 text-indigo-800 font-bold rounded-full w-7 h-7 flex items-center justify-center text-sm" title="Section Index">
+                    ${index}
+                </div>
                 <div class="flex-1">
                     <h3 class="font-medium text-gray-900">${section.title || 'Untitled Section'}</h3>
                     <p class="text-sm text-gray-600">${section.questions ? section.questions.length : 0} questions</p>
@@ -574,8 +577,13 @@ function renderSectionEditor(section, index) {
         <div class="max-w-4xl mx-auto">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
                 <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-2">${section.title || 'Untitled Section'}</h2>
-                    <p class="text-gray-600">${section.description || 'No description'}</p>
+                    <div class="flex items-center space-x-3 mb-2">
+                        <div class="flex-shrink-0 bg-indigo-100 text-indigo-800 font-bold rounded-full w-8 h-8 flex items-center justify-center" title="Section Index">
+                            ${index}
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-900">${section.title || 'Untitled Section'}</h2>
+                    </div>
+                    <p class="text-gray-600 ml-11">${section.description || 'No description'}</p>
                 </div>
                 
                 <div class="space-y-4">
@@ -626,6 +634,9 @@ function createQuestionElement(question, sectionIndex, questionIndex) {
                             <circle cx="6" cy="10" r="1"/>
                             <circle cx="10" cy="10" r="1"/>
                         </svg>
+                    </div>
+                    <div class="flex-shrink-0 bg-green-100 text-green-800 font-bold rounded-full w-7 h-7 flex items-center justify-center text-sm" title="Question Index">
+                        ${questionIndex}
                     </div>
                     <div class="flex-1">
                         <h4 class="font-medium text-gray-900">${question.title || 'Untitled Question'}</h4>
