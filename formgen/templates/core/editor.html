@@ -249,6 +249,25 @@
                 <!-- Dynamic fields based on question type -->
             </div>
             
+            <!-- Required Field Controls -->
+            <div id="questionRequiredControls" class="mb-4">
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="questionRequired" name="required" onchange="toggleRequiredHint()"
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <label for="questionRequired" class="text-sm font-medium text-gray-700">This question is required</label>
+                    </div>
+                    
+                    <div id="questionRequiredHintControl" class="hidden pl-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Required Hint (optional)</label>
+                        <input type="text" id="questionRequiredHint" name="required_hint"
+                               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="e.g., This field is mandatory to proceed">
+                        <p class="text-xs text-gray-500 mt-1">Custom message to display when this required field is empty</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Visibility Controls -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Visibility Condition</label>
@@ -805,6 +824,11 @@ function editQuestion(sectionIndex, questionIndex) {
     // Update specific fields based on type
     updateQuestionSpecificFields(question.type || 'text');
     
+    // Reset required controls
+    document.getElementById('questionRequired').checked = false;
+    document.getElementById('questionRequiredHint').value = '';
+    document.getElementById('questionRequiredHintControl').classList.add('hidden');
+    
     // Set values for specific fields
     if (question.choices) {
         document.getElementById('questionChoices').value = question.choices.join('\n');
@@ -856,11 +880,25 @@ function editQuestion(sectionIndex, questionIndex) {
             allowedTypesField.value = question.validation.allowedTypes.join('\n');
         }
     }
+    // Handle required field
     if (question.required !== undefined) {
         const requiredField = document.getElementById('questionRequired');
         if (requiredField) {
             // Handle both string and boolean values for backwards compatibility
             requiredField.checked = question.required === 'true' || question.required === true;
+            
+            // Show required_hint control if required is checked
+            if (requiredField.checked) {
+                toggleRequiredHint();
+            }
+        }
+    }
+    
+    // Handle required_hint field
+    if (question.required_hint !== undefined) {
+        const requiredHintField = document.getElementById('questionRequiredHint');
+        if (requiredHintField) {
+            requiredHintField.value = question.required_hint;
         }
     }
     
@@ -1078,14 +1116,6 @@ function updateQuestionSpecificFields(type) {
                 <p class="text-xs text-gray-500 mt-1">One file extension per line (e.g., .pdf, .jpg, .docx)</p>
             </div>
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Required</label>
-                <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="questionRequired" name="required"
-                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <label for="questionRequired" class="text-sm text-gray-700">This field is required</label>
-                </div>
-            </div>
-            <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Hint</label>
                 <input type="text" id="questionHint" name="hint"
                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1182,6 +1212,26 @@ function updateQuestionSpecificFields(type) {
         } else {
             console.log('CodeMirror initialization failed:', { textarea: !!textarea, CodeMirror: typeof CodeMirror });
         }
+    }
+    
+    // Show/hide required controls based on question type
+    const requiredControls = document.getElementById('questionRequiredControls');
+    if (type === 'markdown') {
+        requiredControls.classList.add('hidden');
+    } else {
+        requiredControls.classList.remove('hidden');
+    }
+}
+
+function toggleRequiredHint() {
+    const requiredCheckbox = document.getElementById('questionRequired');
+    const requiredHintControl = document.getElementById('questionRequiredHintControl');
+    
+    if (requiredCheckbox.checked) {
+        requiredHintControl.classList.remove('hidden');
+    } else {
+        requiredHintControl.classList.add('hidden');
+        document.getElementById('questionRequiredHint').value = '';
     }
 }
 
@@ -1483,13 +1533,33 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         delete question.hint;
     }
     
+    // Handle required and required_hint fields for all types except markdown
+    if (question.type !== 'markdown') {
+        const isRequired = formData.get('required') === 'on';
+        if (isRequired) {
+            question.required = true;
+            
+            // Handle required_hint - only include if not empty
+            const requiredHintValue = formData.get('required_hint') || '';
+            if (requiredHintValue.trim()) {
+                question.required_hint = requiredHintValue.trim();
+            } else {
+                delete question.required_hint;
+            }
+        } else {
+            delete question.required;
+            delete question.required_hint;
+        }
+    } else {
+        // Remove required fields for markdown type
+        delete question.required;
+        delete question.required_hint;
+    }
+    
     // Handle file upload specific fields
     if (question.type === 'fileUpload') {
         // Set description
         question.description = formData.get('description') || '';
-        
-        // Set required field as string
-        question.required = formData.get('required') === 'on' ? 'true' : 'false';
         
         // Set validation object
         const maxFiles = parseInt(formData.get('maxFiles')) || 5;
@@ -1521,7 +1591,6 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         // Remove file upload specific fields for other types
         delete question.description;
         delete question.validation;
-        delete question.required;
     }
     
     if (question.type === 'display') {
