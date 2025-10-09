@@ -650,6 +650,11 @@ function createQuestionElement(question, sectionIndex, questionIndex) {
                             class="text-blue-500 hover:text-blue-600 text-sm">
                         ✏️ Edit
                     </button>
+                    <button onclick="duplicateQuestion(${sectionIndex}, ${questionIndex})" 
+                            class="text-green-500 hover:text-green-600 text-sm"
+                            title="Duplicate question">
+                        📋 Duplicate
+                    </button>
                     <button onclick="deleteQuestion(${sectionIndex}, ${questionIndex})" 
                             class="text-red-500 hover:text-red-600 text-sm">
                         🗑️ Delete
@@ -1214,6 +1219,31 @@ function duplicateSection(index) {
     
     // Select the newly duplicated section
     selectSection(index + 1);
+}
+
+function duplicateQuestion(sectionIndex, questionIndex) {
+    // Get the question to duplicate
+    const section = currentSchema.answers[sectionIndex];
+    const originalQuestion = section.questions[questionIndex];
+    
+    // Create a deep copy of the question
+    const duplicatedQuestion = JSON.parse(JSON.stringify(originalQuestion));
+    
+    // Assign new unique ID to the question
+    duplicatedQuestion.id = nextQuestionId++;
+    
+    // Update the title to indicate it's a copy
+    duplicatedQuestion.title = duplicatedQuestion.title + ' (Copy)';
+    
+    // Insert the duplicated question right after the original
+    section.questions.splice(questionIndex + 1, 0, duplicatedQuestion);
+    
+    // Update the UI
+    renderHierarchy();
+    updateJSONPreview();
+    
+    // Re-render the section editor to show the new question
+    renderSectionEditor(section, sectionIndex);
 }
 
 function deleteSection(index) {
