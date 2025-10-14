@@ -86,7 +86,7 @@ class FormOnConditionHandler {
     }
   }
 
-  executeAction({ type, varName, value }) {
+  executeAction({ type, varName, value, objectKey }) {
     switch (type) {
       case 'set':
         this.vars[varName] = value;
@@ -100,6 +100,10 @@ class FormOnConditionHandler {
         break;
       case 'decrement':
         this.vars[varName] = (this.vars[varName] || 0) - parseFloat(value);
+        break;
+      case 'setObjectKey':
+        if (!this.vars[varName]) this.vars[varName] = {};
+        this.vars[varName][objectKey] = value;
         break;
     }
   }
@@ -177,6 +181,16 @@ this.vars[varName] = (this.vars[varName] || 0) + parseFloat(value);
 // After: vars.lives = 2
 
 this.vars[varName] = (this.vars[varName] || 0) - parseFloat(value);
+```
+
+### `setObjectKey` - Set object property ✨ NEW
+```javascript
+// Before: vars.user_profile = {}
+// Action: { type: "setObjectKey", varName: "user_profile", objectKey: "email", value: "john@example.com" }
+// After: vars.user_profile = { email: "john@example.com" }
+
+if (!this.vars[varName]) this.vars[varName] = {};
+this.vars[varName][objectKey] = value;
 ```
 
 ---

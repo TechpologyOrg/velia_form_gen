@@ -1002,8 +1002,24 @@ function editQuestion(sectionIndex, questionIndex) {
             
             // Set action
             lastRule.querySelector('.onConditionActionType').value = rule.action.type || 'set';
-            lastRule.querySelector('.onConditionVarName').value = rule.action.varName || '';
-            lastRule.querySelector('.onConditionActionValue').value = rule.action.value || '';
+            
+            // Update action fields based on type
+            updateOnConditionActionFields(lastRule);
+            
+            // Set varName and value in appropriate fields
+            const varNameFields = lastRule.querySelectorAll('.onConditionVarName');
+            varNameFields.forEach(field => field.value = rule.action.varName || '');
+            
+            const valueFields = lastRule.querySelectorAll('.onConditionActionValue');
+            valueFields.forEach(field => field.value = rule.action.value || '');
+            
+            // Set objectKey if it exists
+            if (rule.action.objectKey) {
+                const objectKeyField = lastRule.querySelector('.onConditionObjectKey');
+                if (objectKeyField) {
+                    objectKeyField.value = rule.action.objectKey;
+                }
+            }
         });
     }
     
@@ -1792,6 +1808,16 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
             value: actionValue
         };
         
+        // Add objectKey for setObjectKey action type
+        if (actionType === 'setObjectKey') {
+            const objectKey = ruleElement.querySelector('.onConditionObjectKey').value;
+            if (objectKey) {
+                action.objectKey = objectKey;
+            } else {
+                return; // Skip if no object key provided
+            }
+        }
+        
         // Add the complete rule
         onConditionRules.push({
             condition: condition,
@@ -2265,23 +2291,44 @@ function addOnCondition() {
         <div class="p-3 bg-green-50 rounded border border-green-200">
             <label class="block text-xs font-semibold text-gray-700 mb-2">THEN (Action)</label>
             
-            <div class="grid grid-cols-3 gap-2">
-                <div>
-                    <label class="block text-xs text-gray-600 mb-1">Action Type</label>
-                    <select class="onConditionActionType w-full border border-gray-300 rounded px-2 py-1 text-sm">
-                        <option value="set">Set Value</option>
-                        <option value="append">Append to Array</option>
-                        <option value="increment">Increment Number</option>
-                        <option value="decrement">Decrement Number</option>
-                    </select>
+            <div class="mb-2">
+                <label class="block text-xs text-gray-600 mb-1">Action Type</label>
+                <select class="onConditionActionType w-full border border-gray-300 rounded px-2 py-1 text-sm" onchange="updateOnConditionActionFields(this.closest('.border-blue-200'))">
+                    <option value="set">Set Value</option>
+                    <option value="append">Append to Array</option>
+                    <option value="increment">Increment Number</option>
+                    <option value="decrement">Decrement Number</option>
+                    <option value="setObjectKey">Set Object Key/Value</option>
+                </select>
+            </div>
+            
+            <div class="onConditionStandardFields">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Variable Name</label>
+                        <input type="text" class="onConditionVarName w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., tags">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Value</label>
+                        <input type="text" class="onConditionActionValue w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="value">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-600 mb-1">Variable Name</label>
-                    <input type="text" class="onConditionVarName w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., tags">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-600 mb-1">Value</label>
-                    <input type="text" class="onConditionActionValue w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="value">
+            </div>
+            
+            <div class="onConditionObjectFields hidden">
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Variable Name</label>
+                        <input type="text" class="onConditionVarName w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., user_data">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Object Key</label>
+                        <input type="text" class="onConditionObjectKey w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., email">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Value</label>
+                        <input type="text" class="onConditionActionValue w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="value">
+                    </div>
                 </div>
             </div>
             <div class="text-xs text-gray-500 mt-2">
@@ -2396,6 +2443,20 @@ function addOnConditionAnyOfCondition(ruleElement) {
     `;
     
     container.appendChild(condDiv);
+}
+
+function updateOnConditionActionFields(ruleElement) {
+    const actionType = ruleElement.querySelector('.onConditionActionType').value;
+    const standardFields = ruleElement.querySelector('.onConditionStandardFields');
+    const objectFields = ruleElement.querySelector('.onConditionObjectFields');
+    
+    if (actionType === 'setObjectKey') {
+        standardFields.classList.add('hidden');
+        objectFields.classList.remove('hidden');
+    } else {
+        standardFields.classList.remove('hidden');
+        objectFields.classList.add('hidden');
+    }
 }
 
 // Date operator handling functions
