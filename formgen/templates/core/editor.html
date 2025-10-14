@@ -1808,13 +1808,19 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
             value: actionValue
         };
         
-        // Add objectKey for setObjectKey action type
-        if (actionType === 'setObjectKey') {
+        // Add objectKey for setObjectKey and setObjectKeyFromQuestion action types
+        if (actionType === 'setObjectKey' || actionType === 'setObjectKeyFromQuestion') {
             const objectKey = ruleElement.querySelector('.onConditionObjectKey').value;
             if (objectKey) {
                 action.objectKey = objectKey;
             } else {
                 return; // Skip if no object key provided
+            }
+            
+            // For setObjectKeyFromQuestion, the value will be taken from the triggering question
+            // So we can clear it or set a placeholder (frontend will handle this)
+            if (actionType === 'setObjectKeyFromQuestion') {
+                action.value = ''; // Value will be populated by frontend from question
             }
         }
         
@@ -2299,6 +2305,7 @@ function addOnCondition() {
                     <option value="increment">Increment Number</option>
                     <option value="decrement">Decrement Number</option>
                     <option value="setObjectKey">Set Object Key/Value</option>
+                    <option value="setObjectKeyFromQuestion">Set Object Key (from question value)</option>
                 </select>
             </div>
             
@@ -2331,6 +2338,23 @@ function addOnCondition() {
                     </div>
                 </div>
             </div>
+            
+            <div class="onConditionObjectFromQuestionFields hidden">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Variable Name</label>
+                        <input type="text" class="onConditionVarName w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., user_profile">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Object Key</label>
+                        <input type="text" class="onConditionObjectKey w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="e.g., name">
+                    </div>
+                </div>
+                <div class="text-xs text-blue-600 mt-1 italic">
+                    ℹ️ Value will be automatically taken from the question that triggered this condition
+                </div>
+            </div>
+            
             <div class="text-xs text-gray-500 mt-2">
                 Variable will be created in the vars object if it doesn't exist.
             </div>
@@ -2449,13 +2473,20 @@ function updateOnConditionActionFields(ruleElement) {
     const actionType = ruleElement.querySelector('.onConditionActionType').value;
     const standardFields = ruleElement.querySelector('.onConditionStandardFields');
     const objectFields = ruleElement.querySelector('.onConditionObjectFields');
+    const objectFromQuestionFields = ruleElement.querySelector('.onConditionObjectFromQuestionFields');
     
+    // Hide all field sets first
+    standardFields.classList.add('hidden');
+    objectFields.classList.add('hidden');
+    objectFromQuestionFields.classList.add('hidden');
+    
+    // Show the appropriate field set
     if (actionType === 'setObjectKey') {
-        standardFields.classList.add('hidden');
         objectFields.classList.remove('hidden');
+    } else if (actionType === 'setObjectKeyFromQuestion') {
+        objectFromQuestionFields.classList.remove('hidden');
     } else {
         standardFields.classList.remove('hidden');
-        objectFields.classList.add('hidden');
     }
 }
 

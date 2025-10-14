@@ -55,7 +55,22 @@
           "title": "Age",
           "type": "numeric",
           "value": "",
-          "placeholder": "Enter your age"
+          "placeholder": "Enter your age",
+          "onCondition": [
+            {
+              "condition": {
+                "path": "3",
+                "op": "isNotEmpty",
+                "value": ""
+              },
+              "action": {
+                "type": "setObjectKeyFromQuestion",
+                "varName": "user_profile",
+                "objectKey": "age",
+                "value": ""
+              }
+            }
+          ]
         },
         {
           "id": 4,
