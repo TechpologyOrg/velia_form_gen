@@ -44,16 +44,18 @@ class FormOnConditionHandler {
     
     const question = this.findQuestion(questionId);
     if (question?.onCondition) {
-      this.processRules(question.onCondition);
+      this.processRules(question.onCondition, questionId);
     }
     
     return this.vars; // Return updated vars for re-render
   }
 
-  processRules(rules) {
+  processRules(rules, questionId) {
     rules.forEach(rule => {
       if (this.checkCondition(rule.condition)) {
-        this.executeAction(rule.action);
+        // Pass the question value for actions that need it
+        const questionValue = this.formData[questionId];
+        this.executeAction(rule.action, questionValue);
       }
     });
   }
@@ -86,7 +88,7 @@ class FormOnConditionHandler {
     }
   }
 
-  executeAction({ type, varName, value, objectKey }) {
+  executeAction({ type, varName, value, objectKey }, questionValue) {
     switch (type) {
       case 'set':
         this.vars[varName] = value;
@@ -104,6 +106,10 @@ class FormOnConditionHandler {
       case 'setObjectKey':
         if (!this.vars[varName]) this.vars[varName] = {};
         this.vars[varName][objectKey] = value;
+        break;
+      case 'setObjectKeyFromQuestion':
+        if (!this.vars[varName]) this.vars[varName] = {};
+        this.vars[varName][objectKey] = questionValue; // Use the question's value
         break;
     }
   }
@@ -183,7 +189,7 @@ this.vars[varName] = (this.vars[varName] || 0) + parseFloat(value);
 this.vars[varName] = (this.vars[varName] || 0) - parseFloat(value);
 ```
 
-### `setObjectKey` - Set object property ✨ NEW
+### `setObjectKey` - Set object property ✨
 ```javascript
 // Before: vars.user_profile = {}
 // Action: { type: "setObjectKey", varName: "user_profile", objectKey: "email", value: "john@example.com" }
@@ -191,6 +197,17 @@ this.vars[varName] = (this.vars[varName] || 0) - parseFloat(value);
 
 if (!this.vars[varName]) this.vars[varName] = {};
 this.vars[varName][objectKey] = value;
+```
+
+### `setObjectKeyFromQuestion` - Set object property from question value ✨ NEW
+```javascript
+// Question 3 value: 30
+// Before: vars.user_profile = {}
+// Action: { type: "setObjectKeyFromQuestion", varName: "user_profile", objectKey: "age", value: "" }
+// After: vars.user_profile = { age: 30 }
+
+if (!this.vars[varName]) this.vars[varName] = {};
+this.vars[varName][objectKey] = questionValue; // Auto uses question's value
 ```
 
 ---
