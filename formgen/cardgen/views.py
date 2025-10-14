@@ -20,7 +20,14 @@ def get_card_templates(request, org_id):
 def editor(request, template_id):
     """Card template editor"""
     template_obj = get_object_or_404(card_template, id=template_id)
-    return render(request, "cardgen/editor.html", {"template": template_obj})
+    # Serialize template data to JSON to ensure proper boolean handling
+    template_data_json = json.dumps(template_obj.template_data)
+    global_vars_json = json.dumps(template_obj.global_vars)
+    return render(request, "cardgen/editor.html", {
+        "template": template_obj,
+        "template_data_json": template_data_json,
+        "global_vars_json": global_vars_json
+    })
 
 @require_POST
 def create_card_template(request):

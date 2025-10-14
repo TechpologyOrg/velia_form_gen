@@ -407,8 +407,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing data-driven editor...');
     
     try {
-        // Parse the form data - it's already a Python dict, so we need to convert it properly
-        const formData = {{ form.data|safe }};
+        // Parse the form data - properly serialized as JSON from the server
+        const formData = JSON.parse('{{ form_data_json|escapejs }}');
         
         if (formData && formData !== null) {
             if (Array.isArray(formData)) {

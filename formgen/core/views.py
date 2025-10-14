@@ -15,7 +15,9 @@ def get_forms(request, org_id):
 
 def editor(request, form_id):
     form_obj = get_object_or_404(form, id=form_id)
-    return render(request, "core/editor.html", {"form": form_obj})
+    # Serialize form data to JSON to ensure proper boolean handling
+    form_data_json = json.dumps(form_obj.data)
+    return render(request, "core/editor.html", {"form": form_obj, "form_data_json": form_data_json})
 
 @require_POST
 def create_form(request):

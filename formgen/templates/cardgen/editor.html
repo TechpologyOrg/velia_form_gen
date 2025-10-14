@@ -263,13 +263,13 @@
                         
                         <textarea id="templateJson" 
                                   class="w-full h-96 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                                  placeholder="Enter your card template JSON here...">{{ template.template_data|safe }}</textarea>
+                                  placeholder="Enter your card template JSON here..."></textarea>
                         
                         <div class="mt-4">
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Global Variables</h3>
                             <textarea id="globalVars" 
                                       class="w-full h-32 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                                      placeholder="Enter global variables JSON here...">{{ template.global_vars|safe }}</textarea>
+                                      placeholder="Enter global variables JSON here..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -329,8 +329,8 @@
 </div>
 
 <script>
-let templateData = {{ template.template_data|safe }};
-let globalVars = {{ template.global_vars|safe }};
+let templateData = JSON.parse('{{ template_data_json|escapejs }}');
+let globalVars = JSON.parse('{{ global_vars_json|escapejs }}');
 let selectedComponent = null;
 let componentCounter = 0;
 
@@ -358,6 +358,11 @@ document.addEventListener('DOMContentLoaded', function() {
     setupComponentDragAndDrop();
     setupResizing();
     renderComponentTree();
+    
+    // Initialize the textareas with the properly loaded data
+    document.getElementById('templateJson').value = JSON.stringify(templateData, null, 2);
+    document.getElementById('globalVars').value = JSON.stringify(globalVars, null, 2);
+    
     updateLivePreview();
     
     // Auto-update preview on JSON changes
