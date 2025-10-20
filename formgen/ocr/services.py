@@ -22,12 +22,16 @@ except Exception as e:
     logger.error(f"Failed to initialize OpenAI client: {e}")
 
 
-def extract_data_from_image(image_file):
+def extract_data_from_file(file_obj, file_type):
     """
-    Extract data from an image using OpenAI Vision API with OCR focus
+    Extract data from a file (image or PDF) using OpenAI Vision API with OCR focus
+    
+    SECURITY: File is processed in-memory only, never saved to disk.
+    File content is read, encoded, sent to OpenAI, and immediately discarded.
     
     Args:
-        image_file: Django UploadedFile object containing the image
+        file_obj: File-like object (BytesIO) containing the file data
+        file_type: String indicating file type (e.g., 'image/png', 'pdf')
     
     Returns:
         dict: Extracted data as JSON with OCR and other fields
@@ -39,20 +43,29 @@ def extract_data_from_image(image_file):
         }
     
     try:
-        # Read the image file and encode it as base64
-        image_data = image_file.read()
-        base64_image = base64.b64encode(image_data).decode('utf-8')
+        # Read the file data from the BytesIO object
+        file_obj.seek(0)  # Ensure we're at the start
+        file_data = file_obj.read()
         
-        # Determine the image format
-        image_format = image_file.content_type.split('/')[-1]
-        if image_format == 'jpeg':
-            image_format = 'jpg'
+        # Encode as base64 for OpenAI API
+        base64_file = base64.b64encode(file_data).decode('utf-8')
+        
+        # Clear the file data from memory as soon as we have the base64
+        del file_data
+        
+        # Determine MIME type for data URL
+        if file_type == 'pdf':
+            mime_type = 'application/pdf'
+        elif file_type.startswith('image/'):
+            mime_type = file_type
+        else:
+            mime_type = f'image/{file_type}'
         
         # Create the data URL
-        data_url = f"data:{image_file.content_type};base64,{base64_image}"
+        data_url = f"data:{mime_type};base64,{base64_file}"
         
         # Prepare the prompt for OCR extraction
-        prompt = """Analyze this image and extract all visible text and data from it.
+        prompt = """Analyze this document/image and extract all visible text and data from it.
         
 Please provide the output as a JSON object with the following structure:
 - "OCR": A complete transcription of ALL text visible in the image, preserving formatting and structure as much as possible
@@ -97,6 +110,10 @@ Return ONLY the JSON object, no additional text."""
         # Extract the response content
         content = response.choices[0].message.content.strip()
         
+        # Clear the base64 data from memory immediately after API call
+        del base64_file
+        del data_url
+        
         # Try to parse as JSON
         try:
             # Remove markdown code blocks if present
@@ -125,8 +142,17 @@ Return ONLY the JSON object, no additional text."""
             }
             
     except Exception as e:
-        logger.error(f"Error in extract_data_from_image: {str(e)}")
+        logger.error(f"Error in extract_data_from_file: {str(e)}")
         return {
-            "error": f"Failed to process image: {str(e)}"
+            "error": f"Failed to process file: {str(e)}"
         }
+    finally:
+        # Ensure all file data is cleared from memory
+        try:
+            if 'base64_file' in locals():
+                del base64_file
+            if 'data_url' in locals():
+                del data_url
+        except:
+            pass
 

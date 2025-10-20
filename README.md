@@ -8,6 +8,7 @@ A powerful Django-based dynamic form generation system with advanced conditional
 - **Dynamic Form Builder**: Visual editor for creating complex forms
 - **Conditional Visibility** (`visibleWhen`): Show/hide questions based on answers
 - **Variable Manipulation** (`onCondition`): Automatically update variables based on form responses
+- **OCR Reader**: AI-powered text extraction from images and PDFs
 - **Multiple Question Types**: text, numeric, choice, boolean, date, toggleList, file upload, markdown, and more
 - **Nested Sections**: Organize forms into hierarchical sections
 - **Real-time JSON Preview**: See your form schema as you build
@@ -25,6 +26,60 @@ A powerful Django-based dynamic form generation system with advanced conditional
 - **markdown**: Rich text with markdown support
 - **display**: Display variables from the vars object
 - **title**: Section headers and labels
+
+## OCR Reader - NEW! 🚀
+
+Extract text and structured data from images and PDF documents using AI-powered OCR.
+
+### Features
+- **Drag-and-drop file upload** with instant preview
+- **AI-powered OCR** using OpenAI GPT-4o Vision API
+- **Structured data extraction** - automatically identifies fields like names, dates, amounts, etc.
+- **Public API endpoint** - can be called from anywhere
+- **Secure processing** - files never saved to disk, processed in-memory only
+- **Multiple formats** - supports PNG, JPG, GIF, WebP, PDF
+
+### Quick Start
+
+1. Navigate to **📷 OCR Reader** in the navigation bar
+2. Upload an image or PDF document
+3. Wait 5-30 seconds for AI processing
+4. View extracted text and structured data
+5. Copy OCR text or full JSON output
+
+### API Usage
+
+The OCR endpoint is publicly accessible at `/ocr/extract`:
+
+```bash
+curl -X POST \
+  -F "file=@/path/to/your/image.png" \
+  https://your-server.com/ocr/extract
+```
+
+**Response:**
+```json
+{
+  "OCR": "Complete text transcription...",
+  "Name": "John Doe",
+  "Date": "2025-10-20",
+  "Amount": "$1,234.56"
+}
+```
+
+### Documentation
+- **Complete API Guide**: See `OCR_SECURITY_AND_API_GUIDE.md`
+- **Feature Overview**: See `OCR_READER_DOCUMENTATION.md`
+- **Example Script**: Run `python3 example_ocr_api_call.py <image_file>`
+
+### Security
+✅ Files processed in-memory only (never saved to disk)  
+✅ Content validation (magic byte verification)  
+✅ No executable files accepted  
+✅ Size limits (20MB max)  
+✅ Immediate memory cleanup after processing  
+
+---
 
 ## New Feature: onCondition Variable Manipulation
 
@@ -121,15 +176,22 @@ velia_form_gen/
 │   │   ├── views.py        # Form CRUD operations
 │   │   └── urls.py         # URL routing
 │   ├── cardgen/            # Card template generation app
+│   ├── ocr/                # OCR Reader app (NEW)
+│   │   ├── services.py     # OpenAI Vision API integration
+│   │   ├── views.py        # OCR endpoint handlers
+│   │   └── urls.py         # OCR routing
 │   ├── templates/
 │   │   ├── core/
 │   │   │   ├── editor.html # Main form editor
 │   │   │   └── index.html  # Organisation list
+│   │   ├── ocr/
+│   │   │   └── reader.html # OCR Reader interface
 │   │   └── base.html       # Base template
 │   ├── formgen/            # Django project settings
 │   └── manage.py
 ├── sample_form.json        # Example form with onCondition
 ├── sample_answers_array.json
+├── example_ocr_api_call.py # Example OCR API usage
 ├── requirements.txt
 └── Documentation files...
 ```
@@ -191,6 +253,7 @@ Variables can be:
 
 ## API Endpoints
 
+### Form Management
 - `GET /` - Organisation list
 - `GET /org/<org_id>/` - Forms list for organisation
 - `GET /editor/<form_id>/` - Form editor
@@ -198,6 +261,10 @@ Variables can be:
 - `POST /create-form/` - Create new form
 - `POST /import-form/` - Import form from JSON
 - `POST /delete-form/<form_id>/` - Delete form
+
+### OCR API (Public)
+- `GET /ocr/` - OCR Reader interface
+- `POST /ocr/extract` - Extract text/data from uploaded file (images/PDFs)
 
 ## Examples
 
@@ -295,6 +362,12 @@ For questions, issues, or feature requests:
 Developed by AWRA team for Velia.se
 
 ## Version History
+
+### v2.1.0 (October 2025) - NEW!
+- **OCR Reader**: AI-powered text extraction from images and PDFs
+- Public API endpoint for OCR processing (`/ocr/extract`)
+- Enhanced security: in-memory file processing, content validation
+- Comprehensive security documentation
 
 ### v2.0.0 (October 2025)
 - Added onCondition variable manipulation system
