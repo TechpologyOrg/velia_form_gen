@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_htmx',
     'core',
-    'cardgen'
+    'cardgen',
+    'ocr'
 ]
 
 MIDDLEWARE = [

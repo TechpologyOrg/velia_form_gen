@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}OCR Reader - Velia Generator{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">📷 OCR Reader</h1>
+            <p class="mt-2 text-gray-600">Upload an image or document to extract text and data using AI-powered OCR</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Upload Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Upload File</h2>
+                
+                <!-- Drop Zone -->
+                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                    <div id="uploadPrompt">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p class="mt-4 text-sm text-gray-600">
+                            <span class="font-semibold text-blue-600 hover:text-blue-500">Click to upload</span> or drag and drop
+                        </p>
+                        <p class="text-xs text-gray-500 mt-2">PNG, JPG, GIF, WebP up to 10MB</p>
+                    </div>
+                    <div id="uploadProgress" class="hidden">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                        <p class="mt-4 text-sm text-gray-600">Processing image...</p>
+                    </div>
+                </div>
+                
+                <input type="file" id="fileInput" class="hidden" accept="image/*,.pdf" />
+                
+                <!-- Preview -->
+                <div id="previewSection" class="hidden mt-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Preview:</h3>
+                    <div class="relative">
+                        <img id="imagePreview" class="max-w-full h-auto rounded-lg border border-gray-200" alt="Preview" />
+                        <button id="clearButton" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-colors">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="fileName" class="text-sm text-gray-600 mt-2"></p>
+                </div>
+
+                <!-- Error Display -->
+                <div id="errorSection" class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <p id="errorMessage" class="ml-3 text-sm text-red-800"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Extracted Data</h2>
+                
+                <div id="resultsPlaceholder" class="text-center py-12 text-gray-400">
+                    <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="mt-2">Upload an image to see extracted data</p>
+                </div>
+
+                <div id="resultsContent" class="hidden">
+                    <!-- OCR Text -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="h-5 w-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Full OCR Text
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <pre id="ocrText" class="text-sm text-gray-800 whitespace-pre-wrap font-mono"></pre>
+                        </div>
+                        <button id="copyOcrButton" class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors flex items-center">
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy OCR Text
+                        </button>
+                    </div>
+
+                    <!-- Extracted Fields -->
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="h-5 w-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            Extracted Fields
+                        </h3>
+                        <div id="extractedFields" class="space-y-2"></div>
+                        <button id="copyJsonButton" class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors flex items-center">
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy Full JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPrompt = document.getElementById('uploadPrompt');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const previewSection = document.getElementById('previewSection');
+    const imagePreview = document.getElementById('imagePreview');
+    const fileName = document.getElementById('fileName');
+    const clearButton = document.getElementById('clearButton');
+    const errorSection = document.getElementById('errorSection');
+    const errorMessage = document.getElementById('errorMessage');
+    const resultsPlaceholder = document.getElementById('resultsPlaceholder');
+    const resultsContent = document.getElementById('resultsContent');
+    const ocrText = document.getElementById('ocrText');
+    const extractedFields = document.getElementById('extractedFields');
+    const copyOcrButton = document.getElementById('copyOcrButton');
+    const copyJsonButton = document.getElementById('copyJsonButton');
+
+    let currentData = null;
+
+    // Click to upload
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    // Clear button
+    clearButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        resetUpload();
+    });
+
+    // Copy buttons
+    copyOcrButton.addEventListener('click', () => {
+        if (currentData && currentData.OCR) {
+            navigator.clipboard.writeText(currentData.OCR);
+            showCopySuccess(copyOcrButton);
+        }
+    });
+
+    copyJsonButton.addEventListener('click', () => {
+        if (currentData) {
+            navigator.clipboard.writeText(JSON.stringify(currentData, null, 2));
+            showCopySuccess(copyJsonButton);
+        }
+    });
+
+    function showCopySuccess(button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Copied!';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+        }, 2000);
+    }
+
+    function resetUpload() {
+        fileInput.value = '';
+        previewSection.classList.add('hidden');
+        errorSection.classList.add('hidden');
+        resultsPlaceholder.classList.remove('hidden');
+        resultsContent.classList.add('hidden');
+        currentData = null;
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorSection.classList.remove('hidden');
+        uploadPrompt.classList.remove('hidden');
+        uploadProgress.classList.add('hidden');
+    }
+
+    function handleFile(file) {
+        // Hide error
+        errorSection.classList.add('hidden');
+
+        // Validate file type
+        if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+            showError('Please upload an image file (PNG, JPG, GIF, WebP)');
+            return;
+        }
+
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showError('File size must be less than 10MB');
+            return;
+        }
+
+        // Show preview
+        fileName.textContent = file.name;
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                previewSection.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Upload file
+        uploadFile(file);
+    }
+
+    async function uploadFile(file) {
+        // Show progress
+        uploadPrompt.classList.add('hidden');
+        uploadProgress.classList.remove('hidden');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/ocr/extract', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Failed to process image');
+            }
+
+            // Display results
+            displayResults(data);
+
+        } catch (error) {
+            console.error('Upload error:', error);
+            showError(error.message || 'Failed to process image. Please try again.');
+        } finally {
+            uploadPrompt.classList.remove('hidden');
+            uploadProgress.classList.add('hidden');
+        }
+    }
+
+    function displayResults(data) {
+        currentData = data;
+
+        // Show results section
+        resultsPlaceholder.classList.add('hidden');
+        resultsContent.classList.remove('hidden');
+
+        // Display OCR text
+        if (data.OCR) {
+            ocrText.textContent = data.OCR;
+        }
+
+        // Display other fields
+        extractedFields.innerHTML = '';
+        for (const [key, value] of Object.entries(data)) {
+            if (key !== 'OCR' && key !== 'error') {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'bg-gray-50 rounded-lg p-3 border border-gray-200';
+                fieldDiv.innerHTML = `
+                    <div class="text-xs font-medium text-gray-500 uppercase">${key}</div>
+                    <div class="text-sm text-gray-800 mt-1">${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</div>
+                `;
+                extractedFields.appendChild(fieldDiv);
+            }
+        }
+    }
+</script>
+{% endblock %}
+
