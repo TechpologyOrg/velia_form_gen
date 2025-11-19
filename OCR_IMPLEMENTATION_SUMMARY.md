@@ -283,3 +283,4 @@ fetch('/ocr/extract', {
 **Implemented by**: AWRA Team for Velia.se  
 **Version**: 2.1.0
 
+

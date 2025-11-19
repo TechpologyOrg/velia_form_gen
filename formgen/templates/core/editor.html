@@ -1724,7 +1724,11 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         const conditionType = ruleElement.querySelector('.onConditionType').value;
         const actionType = ruleElement.querySelector('.onConditionActionType').value;
         const varName = ruleElement.querySelector('.onConditionVarName').value;
-        const actionValue = ruleElement.querySelector('.onConditionActionValue').value;
+        
+        // Only get actionValue for action types that need it
+        // For setObjectKeyFromQuestion, value is set from the question, not from a field
+        const actionValueElement = ruleElement.querySelector('.onConditionActionValue');
+        const actionValue = actionValueElement ? actionValueElement.value : '';
         
         if (!varName) return; // Skip if no variable name
         
@@ -1810,9 +1814,15 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         
         // Add objectKey for setObjectKey and setObjectKeyFromQuestion action types
         if (actionType === 'setObjectKey' || actionType === 'setObjectKeyFromQuestion') {
-            const objectKey = ruleElement.querySelector('.onConditionObjectKey').value;
-            if (objectKey) {
-                action.objectKey = objectKey;
+            const objectKeyElement = ruleElement.querySelector('.onConditionObjectKey');
+            if (!objectKeyElement) {
+                console.error('ObjectKey field not found for action type:', actionType);
+                return; // Skip if objectKey field doesn't exist
+            }
+            
+            const objectKey = objectKeyElement.value;
+            if (objectKey && objectKey.trim()) {
+                action.objectKey = objectKey.trim();
             } else {
                 return; // Skip if no object key provided
             }

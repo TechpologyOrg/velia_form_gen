@@ -328,3 +328,4 @@ OpenAI Vision API pricing (as of 2025):
 - Basic image OCR functionality
 - OpenAI Vision API integration
 
+
