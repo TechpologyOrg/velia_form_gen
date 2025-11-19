@@ -1723,12 +1723,47 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     ruleElements.forEach(ruleElement => {
         const conditionType = ruleElement.querySelector('.onConditionType').value;
         const actionType = ruleElement.querySelector('.onConditionActionType').value;
-        const varName = ruleElement.querySelector('.onConditionVarName').value;
         
-        // Only get actionValue for action types that need it
-        // For setObjectKeyFromQuestion, value is set from the question, not from a field
-        const actionValueElement = ruleElement.querySelector('.onConditionActionValue');
-        const actionValue = actionValueElement ? actionValueElement.value : '';
+        // Read varName and actionValue from the container that matches the action type
+        let varName = '';
+        let actionValue = '';
+        
+        if (actionType === 'setObjectKey') {
+            // For setObjectKey, read from onConditionObjectFields
+            const objectFields = ruleElement.querySelector('.onConditionObjectFields');
+            if (objectFields) {
+                const varNameField = objectFields.querySelector('.onConditionVarName');
+                const actionValueField = objectFields.querySelector('.onConditionActionValue');
+                varName = varNameField ? varNameField.value : '';
+                actionValue = actionValueField ? actionValueField.value : '';
+            }
+        } else if (actionType === 'setObjectKeyFromQuestion') {
+            // For setObjectKeyFromQuestion, read from onConditionObjectFromQuestionFields
+            const objectFromQuestionFields = ruleElement.querySelector('.onConditionObjectFromQuestionFields');
+            if (objectFromQuestionFields) {
+                const varNameField = objectFromQuestionFields.querySelector('.onConditionVarName');
+                varName = varNameField ? varNameField.value : '';
+                // For setObjectKeyFromQuestion, no actionValue field exists (value comes from question)
+                actionValue = '';
+            }
+        } else {
+            // Standard fields for other action types
+            const standardFields = ruleElement.querySelector('.onConditionStandardFields');
+            if (standardFields) {
+                const varNameField = standardFields.querySelector('.onConditionVarName');
+                const actionValueField = standardFields.querySelector('.onConditionActionValue');
+                varName = varNameField ? varNameField.value : '';
+                actionValue = actionValueField ? actionValueField.value : '';
+            }
+        }
+        
+        // Fallback: if we didn't find varName, try querySelector (for backwards compatibility)
+        if (!varName) {
+            const varNameField = ruleElement.querySelector('.onConditionVarName');
+            if (varNameField) {
+                varName = varNameField.value;
+            }
+        }
         
         if (!varName) return; // Skip if no variable name
         
@@ -1814,9 +1849,25 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         
         // Add objectKey for setObjectKey and setObjectKeyFromQuestion action types
         if (actionType === 'setObjectKey' || actionType === 'setObjectKeyFromQuestion') {
-            const objectKeyElement = ruleElement.querySelector('.onConditionObjectKey');
+            // Read from the container that matches the action type (regardless of visibility)
+            let objectKeyElement = null;
+            
+            if (actionType === 'setObjectKey') {
+                // For setObjectKey, read from onConditionObjectFields
+                const objectFields = ruleElement.querySelector('.onConditionObjectFields');
+                if (objectFields) {
+                    objectKeyElement = objectFields.querySelector('.onConditionObjectKey');
+                }
+            } else if (actionType === 'setObjectKeyFromQuestion') {
+                // For setObjectKeyFromQuestion, read from onConditionObjectFromQuestionFields
+                const objectFromQuestionFields = ruleElement.querySelector('.onConditionObjectFromQuestionFields');
+                if (objectFromQuestionFields) {
+                    objectKeyElement = objectFromQuestionFields.querySelector('.onConditionObjectKey');
+                }
+            }
+            
             if (!objectKeyElement) {
-                console.error('ObjectKey field not found for action type:', actionType);
+                console.error('ObjectKey field not found for action type:', actionType, ruleElement);
                 return; // Skip if objectKey field doesn't exist
             }
             
@@ -1824,6 +1875,7 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
             if (objectKey && objectKey.trim()) {
                 action.objectKey = objectKey.trim();
             } else {
+                console.error('ObjectKey is empty for action type:', actionType);
                 return; // Skip if no object key provided
             }
             
@@ -1835,6 +1887,7 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
         }
         
         // Add the complete rule
+        console.log('Adding onCondition rule:', { condition, action });
         onConditionRules.push({
             condition: condition,
             action: action
@@ -1842,10 +1895,13 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     });
     
     // Save onCondition to question
+    console.log('Total onCondition rules to save:', onConditionRules.length, onConditionRules);
     if (onConditionRules.length > 0) {
         question.onCondition = onConditionRules;
+        console.log('Saved onCondition to question:', question.onCondition);
     } else {
         delete question.onCondition;
+        console.log('No onCondition rules, deleted onCondition from question');
     }
     
     // Re-render the section editor
